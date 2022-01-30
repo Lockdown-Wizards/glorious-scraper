@@ -7,7 +7,7 @@
  * registers the activation and deactivation functions, and defines a function
  * that starts the plugin.
  *
- * @link              https://nicksabia.tech/
+ * @link              https://github.com/Lockdown-Wizards/glorious-scraper
  * @since             0.0.1
  * @package           Glorious_Scraper
  *
@@ -19,7 +19,7 @@
  * Author:            Lockdown Wizards
  * Requires at least: 5.9
  * Tested up to:      5.8
- * Author URI:        https://nicksabia.tech//
+ * Author URI:        https://github.com/Lockdown-Wizards/glorious-scraper
  * License:           GPL-2.0+
  * License URI:       https://www.gnu.org/licenses/gpl-2.0.txt
  * Text Domain:       glorious-scraper
