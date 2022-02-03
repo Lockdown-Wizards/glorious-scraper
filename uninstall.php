@@ -55,7 +55,14 @@ function plugin_name_uninstall() {
 	 *
 	 * @see https://developer.wordpress.org/plugins/plugin-basics/uninstall-methods/#method-2-uninstall-php
 	 */
+	uninstall_url_table();
+}
 
+function uninstall_url_table() {
+	global $wpdb;
+	$table_name = $wpdb->prefix . 'gr_scraper_urls';
+	$sql = "DROP TABLE IF EXISTS $table_name;";
+	$wpdb->query($sql);
 }
 
 plugin_name_uninstall();

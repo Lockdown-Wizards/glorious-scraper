@@ -20,6 +20,11 @@
  * @subpackage Glorious_Scraper/includes
  * @author     Your Name <lockdownwizards@gmail.com>
  */
+
+// Access to the Wordpress database
+//require_once '../../../../wp-load.php';
+//global $wpdb;
+
 class Glorious_Scraper_Activator {
 
 	/**
@@ -78,7 +83,7 @@ class Glorious_Scraper_Activator {
 		 * The plugin is now safely activated.
 		 * Perform your activation actions here.
 		 */
-
+		install_url_table();
 	}
 
 	/**
@@ -167,5 +172,38 @@ class Glorious_Scraper_Activator {
 
 	}
 
+}
+
+// Creates the table in the db responsible for holding the urls to scrape.
+function install_url_table() {
+	global $wpdb;
+
+	$table_name = $wpdb->prefix . 'gr_scraper_urls';
+	
+	$charset_collate = $wpdb->get_charset_collate();
+
+	$sql = "CREATE TABLE $table_name (
+		id int(10) unsigned NOT NULL AUTO_INCREMENT,
+		url text NOT NULL,
+		active tinyint(1) NOT NULL,
+		PRIMARY KEY  (id)
+	  ) $charset_collate;";
+
+	require_once( ABSPATH . 'wp-admin/includes/upgrade.php' );
+	dbDelta( $sql );
+
+	/*$sql = "CREATE TABLE $table_name (
+		id mediumint(9) NOT NULL AUTO_INCREMENT,
+		time datetime DEFAULT '0000-00-00 00:00:00' NOT NULL,
+		name tinytext NOT NULL,
+		text text NOT NULL,
+		url varchar(55) DEFAULT '' NOT NULL,
+		PRIMARY KEY  (id)
+	) $charset_collate;";
+
+	require_once( ABSPATH . 'wp-admin/includes/upgrade.php' );
+	dbDelta( $sql );*/
+
+	//add_option( 'jal_db_version', $jal_db_version );
 }
 
