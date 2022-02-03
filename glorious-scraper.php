@@ -76,7 +76,7 @@ require plugin_dir_path( __FILE__ ) . 'includes/class-glorious-scraper.php';
  * kicking off the plugin from this point in the file does
  * not affect the page life cycle.
  *
- * Generally you will want to hook this function, instead of callign it globally.
+ * Generally you will want to hook this function, instead of calling it globally.
  * However since the purpose of your plugin is not known until you write it, we include the function globally.
  *
  * @since    0.0.1
@@ -84,7 +84,16 @@ require plugin_dir_path( __FILE__ ) . 'includes/class-glorious-scraper.php';
 function plugin_name_run() {
 
 	$plugin = new Glorious_Scraper();
+	//$plugin->get_loader()->add_action('admin_menu', $plugin, 'setup_admin_menu');
+	add_action('admin_menu', 'setup_admin_menu');
 	$plugin->run();
+}
 
+function setup_admin_menu(){
+    add_menu_page( 'Event Scraper', 'Event Scraper', 'manage_options', 'event-scraper', 'admin_menu_init' );
+}
+ 
+function admin_menu_init(){
+    echo "<h1>Hello World!</h1>";
 }
 plugin_name_run();
