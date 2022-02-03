@@ -14,7 +14,7 @@
  * @wordpress-plugin
  * Plugin Name:       Glorious Scraper
  * Plugin URI:        https://plugin.com/glorious-scraper-uri/
- * Description:       An event scraper which runs daily, pulling into from Facebook.
+ * Description:       An event scraper which runs daily, pulling info from Facebook.
  * Version:           0.0.1
  * Author:            Lockdown Wizards
  * Requires at least: 5.9
