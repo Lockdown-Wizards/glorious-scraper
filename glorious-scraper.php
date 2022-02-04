@@ -176,7 +176,7 @@ function admin_menu_init()
 			<table id="urls-table">
 				<tr>
 					<th>URL</th>
-					<th>Action</th>
+					<th>Actions</th>
 				</tr>
 				<?php
 				//json_encode($urls);
@@ -197,10 +197,6 @@ function admin_menu_init()
 					</tr>
 				</form>
 			</table>
-
-			<form method="POST" action="save-all.php">
-				<input type='submit' href="JavaScript:void(0);" value="Save Settings" />
-			</form>
 		</section>
 	</div>
 <?php
@@ -215,27 +211,15 @@ function url_table_entry($url)
 				<input style="display: none;" value="<?php echo $url->id; ?>" name="delete" />
 				<input type="submit" value="delete" id="<?php echo $url->id; ?>" class="delete-button" />
 			</form>
+			<form method="post" action="../wp-content/plugins/glorious-scraper/save-all.php">
+				<div style="display: flex;">
+					<input style="display: none;" value="<?php echo $url->id; ?>" name="id" />
+					<input value="<?php echo $url->url; ?>" name="url" />
+					<input type="submit" value="Update" />
+				</div>
+			</form>
 		</td>
 	</tr><?php
-		}
-
-		function update_urls()
-		{
-			global $urls;
-			global $wpdb;
-
-			// loop through urls and update each one with the current input value
-			foreach ($urls as $url) {
-				$wpdb->update(
-					'wp_gr_scraper_urls',
-					array(
-						'url' => $_POST[$url->id]
-					),
-					array(
-						'id' => $url->id
-					)
-				);
-			}
 		}
 
 		plugin_name_run();
