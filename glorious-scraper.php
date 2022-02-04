@@ -96,7 +96,7 @@ function plugin_name_run()
 	// $urls = $wpdb->get_results("SELECT * FROM wp_gr_scraper_urls");
 	// $wpdb->get_results("SELECT * FROM {$wpdb->prefix}author_followers WHERE author_id = $author_id", OBJECT);
 	$urls = $wpdb->get_results("SELECT * FROM wp_gr_scraper_urls");
-	error_log($urls);
+	//error_log($urls);
 	$plugin->run();
 }
 
@@ -108,8 +108,8 @@ function setup_admin_menu()
 function admin_menu_init()
 {
 	global $urls;
-
-	echo "<div>
+	?>
+	<div>
 	<h1>Event Scraper</h1>
   </div>
   <section>
@@ -174,25 +174,38 @@ function admin_menu_init()
 
 	<h3>Saved URLs</h3>
 	<pre>
-	".json_encode($urls)."
+		<table>
+			<tr>
+				<th>URL</th>
+			</tr>
+			<?php
+			//json_encode($urls);
 
-	".var_dump(get_object_vars($urls)). "
+			//var_dump(get_object_vars($urls))
 
 
-	// TODO: Map over the array and display all urls
-
-	<table>
-		<tr>
-			<th>URL</th>
-		</tr>
-		<tr>
-			<td>
-				<input value=".$urls[0]->url." />
-			</td>
-		</tr>
-	</table>
+			// TODO: Map over the array and display all urls
+			foreach ($urls as $url) {
+				url_table_entry($url);
+			}
+			?>
+		</table>
 	
 	</pre>
-  </section>";
+  </section>
+  <?php
 }
+
+function url_table_entry ($url) {
+	?>
+	<tr>
+		<td>
+			<input value="<?php echo $url->url; ?>" />
+		</td>
+	</tr>
+	<?php
+}
+
 plugin_name_run();
+
+?>
