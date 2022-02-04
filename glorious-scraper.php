@@ -27,7 +27,7 @@
  */
 
 // If this file is called directly, abort.
-if ( ! defined( 'WPINC' ) ) {
+if (!defined('WPINC')) {
 	die;
 }
 
@@ -36,7 +36,7 @@ if ( ! defined( 'WPINC' ) ) {
  * Start at version 0.0.1 and use SemVer - https://semver.org
  * Rename this for your plugin and update it as you release new versions.
  */
-define( 'GLORIOUS_SCRAPER_VERSION', '0.0.1' );
+define('GLORIOUS_SCRAPER_VERSION', '0.0.1');
 
 /**
  * The code that runs during plugin activation.
@@ -44,8 +44,9 @@ define( 'GLORIOUS_SCRAPER_VERSION', '0.0.1' );
  * This action is documented in includes/class-glorious-scraper-activator.php
  * Full security checks are performed inside the class.
  */
-function plugin_name_activate() {
-	require_once plugin_dir_path( __FILE__ ) . 'includes/class-glorious-scraper-activator.php';
+function plugin_name_activate()
+{
+	require_once plugin_dir_path(__FILE__) . 'includes/class-glorious-scraper-activator.php';
 	Glorious_Scraper_Activator::activate();
 }
 
@@ -55,19 +56,20 @@ function plugin_name_activate() {
  * This action is documented in includes/class-glorious-scraper-deactivator.php
  * Full security checks are performed inside the class.
  */
-function plugin_name_deactivate() {
-	require_once plugin_dir_path( __FILE__ ) . 'includes/class-glorious-scraper-deactivator.php';
+function plugin_name_deactivate()
+{
+	require_once plugin_dir_path(__FILE__) . 'includes/class-glorious-scraper-deactivator.php';
 	Glorious_Scraper_Deactivator::deactivate();
 }
 
-register_activation_hook( __FILE__, 'plugin_name_activate' );
-register_deactivation_hook( __FILE__, 'plugin_name_deactivate' );
+register_activation_hook(__FILE__, 'plugin_name_activate');
+register_deactivation_hook(__FILE__, 'plugin_name_deactivate');
 
 /**
  * The core plugin class that is used to define internationalization,
  * admin-specific hooks, and public-facing site hooks.
  */
-require plugin_dir_path( __FILE__ ) . 'includes/class-glorious-scraper.php';
+require plugin_dir_path(__FILE__) . 'includes/class-glorious-scraper.php';
 
 /**
  * Begins execution of the plugin.
@@ -81,20 +83,33 @@ require plugin_dir_path( __FILE__ ) . 'includes/class-glorious-scraper.php';
  *
  * @since    0.0.1
  */
-function plugin_name_run() {
-
+function plugin_name_run()
+{
+	global $wpdb;
+	global $urls;
 	$plugin = new Glorious_Scraper();
 	//$plugin->get_loader()->add_action('admin_menu', $plugin, 'setup_admin_menu');
 	add_action('admin_menu', 'setup_admin_menu');
+
+
+	// SELECT * FROM wp_gr_scraper_urls and store in $urls
+	// $urls = $wpdb->get_results("SELECT * FROM wp_gr_scraper_urls");
+	// $wpdb->get_results("SELECT * FROM {$wpdb->prefix}author_followers WHERE author_id = $author_id", OBJECT);
+	$urls = $wpdb->get_results("SELECT * FROM wp_gr_scraper_urls");
+	error_log($urls);
 	$plugin->run();
 }
 
-function setup_admin_menu(){
-    add_menu_page( 'Event Scraper', 'Event Scraper', 'manage_options', 'event-scraper', 'admin_menu_init' );
+function setup_admin_menu()
+{
+	add_menu_page('Event Scraper', 'Event Scraper', 'manage_options', 'event-scraper', 'admin_menu_init');
 }
- 
-function admin_menu_init(){
-    echo "<div>
+
+function admin_menu_init()
+{
+	global $urls;
+
+	echo "<div>
 	<h1>Event Scraper</h1>
   </div>
   <section>
@@ -156,6 +171,28 @@ function admin_menu_init(){
 	  <br>
 	  <input type='submit' value='Save Settings'/>
 	</form>
+
+	<h3>Saved URLs</h3>
+	<pre>
+	".json_encode($urls)."
+
+	".var_dump(get_object_vars($urls)). "
+
+
+	// TODO: Map over the array and display all urls
+
+	<table>
+		<tr>
+			<th>URL</th>
+		</tr>
+		<tr>
+			<td>
+				<input value=".$urls[0]->url." />
+			</td>
+		</tr>
+	</table>
+	
+	</pre>
   </section>";
 }
 plugin_name_run();
