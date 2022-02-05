@@ -176,7 +176,6 @@ function admin_menu_init()
 			<table id="urls-table">
 				<tr>
 					<th>URL</th>
-					<th>Actions</th>
 				</tr>
 				<?php
 				//json_encode($urls);
@@ -188,14 +187,14 @@ function admin_menu_init()
 				}
 				?>
 
-				<form method="POST" action="../wp-content/plugins/glorious-scraper/add-url.php">
-					<tr>
-						<td class="full-width">
-							<input value="" placeholder="Add new URL..." name="new" />
-						</td>
-						<td><input type='submit' href="JavaScript:void(0);" value="Add URL" /></td>
-					</tr>
-				</form>
+				<tr>
+					<td class="full-width">
+						<form method="POST" action="../wp-content/plugins/glorious-scraper/add-url.php">
+							<input class="full-width" value="" placeholder="Add new URL..." name="new" />
+							<input type='submit' href="JavaScript:void(0);" value="Add URL" />
+						</form>
+					</td>
+				</tr>
 			</table>
 		</section>
 	</div>
@@ -205,16 +204,15 @@ function admin_menu_init()
 function url_table_entry($url)
 {
 ?><tr>
-		<form method="post" action="../wp-content/plugins/glorious-scraper/save-all.php">
-			<td class="full-width"><input value="<?php echo $url->url; ?>" name="url" id="url-table-<?php echo $url->id; ?>" />
+		<td>
+			<form method="post" action="../wp-content/plugins/glorious-scraper/save-all.php">
+				<input class="full-width" value="<?php echo $url->url; ?>" name="url" id="url-table-<?php echo $url->id; ?>" />
 				<input style="display: none;" value="<?php echo $url->id; ?>" name="id" />
 				<input type="submit" value="Update" />
-			</td>
-		</form>
-		<td>
-			<form method="post" action="../wp-content/plugins/glorious-scraper/delete.php">
-				<input style="display: none;" value="<?php echo $url->id; ?>" name="delete" />
-				<input type="submit" value="delete" id="<?php echo $url->id; ?>" class="delete-button" />
+			</form>
+			<form method="post" class="left" action="../wp-content/plugins/glorious-scraper/delete.php">
+				<input style="display: none; float: left;" class="left" value="<?php echo $url->id; ?>" name="delete" />
+				<input type="submit" value="delete" class="left" style="float: left;" id="<?php echo $url->id; ?>" class="delete-button" />
 			</form>
 		</td>
 	</tr><?php
