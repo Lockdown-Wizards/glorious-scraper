@@ -37,3 +37,7 @@
 .full-width {
     width: 500px !important;
 }
+
+.left {
+    float: left !important;
+}
