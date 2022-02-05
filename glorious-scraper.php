@@ -205,18 +205,16 @@ function admin_menu_init()
 function url_table_entry($url)
 {
 ?><tr>
-		<td class="full-width"><input value="<?php echo $url->url; ?>" /></td>
+		<form method="post" action="../wp-content/plugins/glorious-scraper/save-all.php">
+			<td class="full-width"><input value="<?php echo $url->url; ?>" name="url" id="url-table-<?php echo $url->id; ?>" />
+				<input style="display: none;" value="<?php echo $url->id; ?>" name="id" />
+				<input type="submit" value="Update" />
+			</td>
+		</form>
 		<td>
 			<form method="post" action="../wp-content/plugins/glorious-scraper/delete.php">
 				<input style="display: none;" value="<?php echo $url->id; ?>" name="delete" />
 				<input type="submit" value="delete" id="<?php echo $url->id; ?>" class="delete-button" />
-			</form>
-			<form method="post" action="../wp-content/plugins/glorious-scraper/save-all.php">
-				<div style="display: flex;">
-					<input style="display: none;" value="<?php echo $url->id; ?>" name="id" />
-					<input value="<?php echo $url->url; ?>" name="url" />
-					<input type="submit" value="Update" />
-				</div>
 			</form>
 		</td>
 	</tr><?php
