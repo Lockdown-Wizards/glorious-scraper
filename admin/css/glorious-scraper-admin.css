@@ -48,7 +48,6 @@
     display: block;
     padding: 10px;
     border: 2px solid black;
-    width: calc(100% - 10px);
     height: 360px;
     background-color: #334;
     color: #ddc;

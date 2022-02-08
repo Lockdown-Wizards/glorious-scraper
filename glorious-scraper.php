@@ -204,6 +204,8 @@ function admin_menu_init()
 		let scraperConsole = document.getElementById("scraperConsole");
 		let scraperButton = document.getElementById("scraperButton");
 
+		// AJAX call to url-feeder.php to handle the scraping of all urls,
+		// then return the result back.
 		scraperButton.addEventListener("click", (e) => {
 			// Upon click, call url-feeder.php
 			fetch("<?php echo get_site_url() . "/wp-content/plugins/glorious-scraper/url-feeder.php"; ?>", {
@@ -218,7 +220,7 @@ function admin_menu_init()
 
 				// Print the text that gets returned to the console in wordpress.
 				if (data.body !== undefined) {
-					let lines = data.body.split(/\r\n|\n\r|\n|\r/);
+					let lines = data.body.split(/(\r\n|\n\r|\n|\r)+/g);
 					lines.forEach(line => {
 						writeToConsole(line);
 					})
