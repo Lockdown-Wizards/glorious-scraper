@@ -92,12 +92,10 @@ function plugin_name_run()
 	//$plugin->get_loader()->add_action('admin_menu', $plugin, 'setup_admin_menu');
 	add_action('admin_menu', 'setup_admin_menu');
 
+	// Grab all group URL's from database.
+	$table_name = $wpdb->prefix . "gr_fbgroups";
+	$urls = $wpdb->get_results("SELECT * FROM $table_name");
 
-	// SELECT * FROM wp_gr_scraper_urls and store in $urls
-	// $urls = $wpdb->get_results("SELECT * FROM wp_gr_scraper_urls");
-	// $wpdb->get_results("SELECT * FROM {$wpdb->prefix}author_followers WHERE author_id = $author_id", OBJECT);
-	$urls = $wpdb->get_results("SELECT * FROM wp_gr_scraper_urls");
-	//error_log($urls);
 	$plugin->run();
 }
 

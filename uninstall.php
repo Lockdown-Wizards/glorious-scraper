@@ -55,12 +55,12 @@ function plugin_name_uninstall() {
 	 *
 	 * @see https://developer.wordpress.org/plugins/plugin-basics/uninstall-methods/#method-2-uninstall-php
 	 */
-	uninstall_url_table();
+	uninstall_table($wpdb->prefix . 'gr_events');
+	uninstall_table($wpdb->prefix . 'gr_fbgroups');
 }
 
-function uninstall_url_table() {
+function uninstall_table($table_name) {
 	global $wpdb;
-	$table_name = $wpdb->prefix . 'gr_scraper_urls';
 	$sql = "DROP TABLE IF EXISTS $table_name;";
 	$wpdb->query($sql);
 }

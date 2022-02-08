@@ -10,8 +10,8 @@ require_once(__DIR__ . '/Event.php');
 require_once dirname(__DIR__) . '\\glorious-scraper\\\requests\\src\\Autoload.php'; // First, include the Requests Autoloader.
 WpOrg\Requests\Autoload::register(); // Next, make sure Requests can load internal classes.
 
-// Grab all URL's from database.
-$table_name = $wpdb->prefix . "gr_scraper_urls";
+// Grab all group URL's from database.
+$table_name = $wpdb->prefix . "gr_fbgroups";
 $urls = $wpdb->get_results("SELECT * FROM $table_name");
 
 // If there are any urls that have been entered, then make a request.

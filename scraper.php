@@ -1,4 +1,11 @@
 <?php
+/*
+ * The main job of this file is to scrape a given facebook group URL for event links found on the page.
+ * Returns an array of Event objects.
+ * These event objects will be added to the database in another file.
+ *
+*/
+
 // Access the wordpress database
 require_once($_SERVER['DOCUMENT_ROOT'] . '/wordpress/wp-load.php');
 global $wpdb;
@@ -22,7 +29,9 @@ $page = $fbSession->request($url);
 $dom = new DOMDocument(); // Create a new DOMDocument object which will be used for parsing through the html
 @ $dom->loadHTML($page->body); // @ surpresses any warnings
 
-$hrefs = extract_fb_event_links($dom);
+$eventLinks = extract_fb_event_links($dom);
+
+
 
 // Check what we received
 //var_dump($request);
@@ -33,7 +42,6 @@ var_dump($hrefs);
 // Given a facebook page, find and extract facebook event links.
 // Returns an array of links.
 function extract_fb_event_links($dom) {
-    $BASE_URL = "https://mbasic.facebook.com";
     // Grab all <a> tags from the event page.
     $linkElems = $dom->getElementsByTagName("a");
     $hrefs = [];
@@ -42,7 +50,7 @@ function extract_fb_event_links($dom) {
         $isEventLink = str_contains($link->getAttribute("href"), '/events/');
         if ($hasHref && $isEventLink) {
             // We split the string by '?' to remove the lengthy query in the original url.
-            $hrefs[] = $BASE_URL . explode("?", $link->getAttribute("href"))[0];
+            $hrefs[] = explode("?", $link->getAttribute("href"))[0];
             //$hrefs[] = $BASE_URL . $link->getAttribute("href");
         }
     }

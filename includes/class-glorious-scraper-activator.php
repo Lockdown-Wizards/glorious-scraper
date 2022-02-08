@@ -83,7 +83,8 @@ class Glorious_Scraper_Activator {
 		 * The plugin is now safely activated.
 		 * Perform your activation actions here.
 		 */
-		install_url_table();
+		install_fbgroups_table();
+		install_events_table();
 	}
 
 	/**
@@ -174,11 +175,11 @@ class Glorious_Scraper_Activator {
 
 }
 
-// Creates the table in the db responsible for holding the urls to scrape.
-function install_url_table() {
+// Creates the table in the db responsible for holding the group urls to scrape for events.
+function install_fbgroups_table() {
 	global $wpdb;
 
-	$table_name = $wpdb->prefix . 'gr_scraper_urls';
+	$table_name = $wpdb->prefix . 'gr_fbgroups';
 	
 	$charset_collate = $wpdb->get_charset_collate();
 
@@ -207,3 +208,27 @@ function install_url_table() {
 	//add_option( 'jal_db_version', $jal_db_version );
 }
 
+// Creates the table in the db responsible for holding the group urls to scrape for events.
+function install_events_table() {
+	global $wpdb;
+
+	$table_name = $wpdb->prefix . 'gr_events';
+	$group_table_name = $wpdb->prefix . 'gr_fbgroups';
+	
+	$charset_collate = $wpdb->get_charset_collate();
+
+	$sql = "CREATE TABLE $table_name (
+		`id` int(10) unsigned NOT NULL COMMENT 'facebook id',
+		`gid` int(10) unsigned NOT NULL COMMENT 'facebook group id',
+		`wpid` bigint(20) unsigned NOT NULL COMMENT 'wp post id',
+		`last_scraped` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+		PRIMARY KEY (`id`),
+		KEY `wp_gr_events_ibfk_1` (`gid`),
+		KEY `wpid` (`wpid`),
+		CONSTRAINT `wp_gr_events_ibfk_1` FOREIGN KEY (`gid`) REFERENCES $group_table_name (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+		CONSTRAINT `wp_gr_events_ibfk_2` FOREIGN KEY (`wpid`) REFERENCES `wp_posts` (`ID`) ON DELETE CASCADE ON UPDATE CASCADE
+	  ) $charset_collate;";
+
+	require_once( ABSPATH . 'wp-admin/includes/upgrade.php' );
+	dbDelta( $sql );
+}
