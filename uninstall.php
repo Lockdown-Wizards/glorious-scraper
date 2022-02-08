@@ -35,7 +35,8 @@
  * @since 0.0.1
  */
 function plugin_name_uninstall() {
-
+	global $wpdb;
+	
 	if ( ! defined( 'WP_UNINSTALL_PLUGIN' )
 		|| empty( $_REQUEST )
 		|| ! isset( $_REQUEST['plugin'] )
