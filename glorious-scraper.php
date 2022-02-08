@@ -114,7 +114,9 @@ function admin_menu_init()
 		<h1>Event Scraper</h1>
 		<section>
 			<h2>Actions</h2>
-			<button>Run Scraper</button>
+			<div id="scraperConsole"></div>
+			<br>
+			<button id="scraperButton">Run Scraper</button>
 		</section>
 		<section>
 			<h2>Settings</h2>
@@ -198,6 +200,43 @@ function admin_menu_init()
 			</table>
 		</section>
 	</div>
+	<script>
+		let scraperConsole = document.getElementById("scraperConsole");
+		let scraperButton = document.getElementById("scraperButton");
+
+		scraperButton.addEventListener("click", (e) => {
+			// Upon click, call url-feeder.php
+			fetch("<?php echo get_site_url() . "/wp-content/plugins/glorious-scraper/url-feeder.php"; ?>", {
+				method: 'GET',
+				headers: {
+					'Content-Type': 'application/json'
+				}
+			})
+			.then(res => res.json())
+			.then(data => {
+				console.log(data);
+
+				// Print the text that gets returned to the console in wordpress.
+				if (data.body !== undefined) {
+					let lines = data.body.split(/\r\n|\n\r|\n|\r/);
+					lines.forEach(line => {
+						writeToConsole(line);
+					})
+				}
+				else {
+					writeToConsole(data);
+				}
+			});
+		});
+
+		// scraperConsole is a global
+		function writeToConsole(msg) {
+			let messageElem = document.createElement("div");
+			messageElem.className = "scraper-console-line";
+			messageElem.innerHTML = msg;
+			scraperConsole.append(messageElem);
+		}
+	</script>
 <?php
 }
 
