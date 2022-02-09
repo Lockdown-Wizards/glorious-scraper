@@ -11,7 +11,7 @@ require_once($_SERVER['DOCUMENT_ROOT'] . '/wordpress/wp-load.php');
 global $wpdb;
 
 // Load in the Requests library: https://github.com/WordPress/Requests
-require_once dirname(__DIR__) . '\\glorious-scraper\\\requests\\src\\Autoload.php'; // First, include the Requests Autoloader.
+require_once dirname(__DIR__) . '\\glorious-scraper\\requests\\src\\Autoload.php'; // First, include the Requests Autoloader.
 WpOrg\Requests\Autoload::register(); // Next, make sure Requests can load internal classes.
 
 // Load the Event class
@@ -52,12 +52,22 @@ foreach($events as $event) {
     $event->set_start_date(extract_fb_event_start_date($event_dom));
 }
 //$event_page = $fbSession->request($url);
-
+//$postId = (get_post_status(12345678)) ? 'ID' : 'import_id';
+// Reference for the args to put into this array
+// https://docs.theeventscalendar.com/reference/functions/tribe_create_event/
+$eventCreationArgs = [
+    "ID" => 12345678, 
+    "post_title" => "THIS IS AN OBVIOUS TEST SO JUST LOOK FOR THIS TEXT IN THE DB PLEASE", 
+    "EventStartDate" => "2022-08-28 07:00:00", 
+    "EventEndDate" => "2022-08-28 09:00:00"
+];
+$eventCreationRequest = create_event($eventCreationArgs);
+echo json_encode($eventCreationRequest->body);
 // Check what we received
 //var_dump($request);
 //echo json_encode($page);
 //echo $page->body;
-var_dump($events);
+//var_dump($events);
 
 // Given a facebook group page, find and extract facebook event links.
 // Returns an array of links.
@@ -88,5 +98,11 @@ function extract_fb_event_start_date($dom) {
     $classname = "cs ct v cu cv";
     $nodes = $finder->query("//*[contains(@class, '$classname')]");
     return $nodes->item(0)->textContent;
+}
+
+// Creates an event in 'the events calendar'.
+// Reference to args for this function: https://docs.theeventscalendar.com/reference/functions/tribe_create_event/
+function create_event($args) {
+    return WpOrg\Requests\Requests::post(get_site_url() . "/wp-content/plugins/glorious-scraper/create-event.php", [], ["args" => $args]);
 }
 ?>
