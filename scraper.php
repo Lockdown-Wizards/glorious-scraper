@@ -55,7 +55,8 @@ foreach($events as $event) {
     $event->set_title($title);
     $event->set_description(extract_fb_event_description($event_dom));
     $event->set_slug(urlencode($title));
-    $event->set_start_date($datetime); // Might need to give the events class this string so that it can extract what it needs from it. Needs: start date, start time, end date, and end time.
+    $event->set_start_date(start_date_from_datetime($datetime)); // Might need to give the events class this string so that it can extract what it needs from it. Needs: start date, start time, end date, and end time.
+    $event->set_start_time(start_time_from_datetime($datetime));
     $event->set_location(extract_fb_event_location($event_dom));
     $event->set_image(extract_fb_event_image($event_dom));
     $event->set_organization($organization);
@@ -145,10 +146,22 @@ function extract_fb_event_organization($dom) {
     return $nodes->item(0)->getElementsByTagName('a')->item(0)->textContent; // Find the <a> tag in this container, then extract its text.
 }
 
+// Given an events page, find and extract the event description.
 function extract_fb_event_description($dom) {
     $eventTabsElem = $dom->getElementById('event_tabs');
     $descriptionContainerElem = $eventTabsElem->childNodes->item(1)->firstChild;
     return $descriptionContainerElem->childNodes->item(1)->textContent;
+}
+
+// Extracts the start time from a date time string obtained from the 'extract_fb_event_datetime' function.
+function start_date_from_datetime($datetime) {
+    return explode(" at ", $datetime)[0];
+}
+
+// Extracts the start time from a date time string obtained from the 'extract_fb_event_datetime' function.
+function start_time_from_datetime($datetime) {
+    $times = explode(" at ", $datetime)[1];
+    return explode(" – ", $times)[0];
 }
 
 // Creates an event in 'the events calendar'.
