@@ -57,3 +57,7 @@
     border-radius: 4px;
     overflow: auto;
 }
+
+.hidden {
+    display: none;
+}

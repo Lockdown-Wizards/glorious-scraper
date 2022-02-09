@@ -14,8 +14,12 @@ global $wpdb;
 require_once dirname(__DIR__) . '\\glorious-scraper\\\requests\\src\\Autoload.php'; // First, include the Requests Autoloader.
 WpOrg\Requests\Autoload::register(); // Next, make sure Requests can load internal classes.
 
+// Load the Event class
+require_once(__DIR__ . '/Event.php');
+
 use WpOrg\Requests\Session;
 
+const MBASIC_URL = "https://mbasic.facebook.com";
 const LOGIN_URL = "https://www.facebook.com/login/";
 
 // Now let's make a request!
@@ -23,26 +27,42 @@ const LOGIN_URL = "https://www.facebook.com/login/";
 $url = $_POST['url'];
 //$request = WpOrg\Requests\Requests::get($url, ['Accept' => 'application/json']);
 $fbSession = new Session();
-$page = $fbSession->request($url);
+$group_page = $fbSession->request($url);
 //$decodedBody = $page->decode_body();
 //var_dump($decodedBody);
 $dom = new DOMDocument(); // Create a new DOMDocument object which will be used for parsing through the html
-@ $dom->loadHTML($page->body); // @ surpresses any warnings
+@ $dom->loadHTML($group_page->body); // @ surpresses any warnings
 
 $eventLinks = extract_fb_event_links($dom);
 
+// Create an Event object for each link.
+$events = [];
+foreach($eventLinks as $eventLink) {
+    $events[] = new Event($eventLink);
+}
 
+// For every link, scrape it for relevant event info.
+
+foreach($events as $event) {
+    $event_page = $fbSession->request(MBASIC_URL . $event->get_url());
+    $event_dom = new DOMDocument();
+    @ $event_dom->loadHTML($event_page->body); // @ surpresses any warnings
+    
+    $event->set_title(extract_fb_event_title($event_dom));
+    $event->set_start_date(extract_fb_event_start_date($event_dom));
+}
+//$event_page = $fbSession->request($url);
 
 // Check what we received
 //var_dump($request);
 //echo json_encode($page);
 //echo $page->body;
-var_dump($hrefs);
+var_dump($events);
 
-// Given a facebook page, find and extract facebook event links.
+// Given a facebook group page, find and extract facebook event links.
 // Returns an array of links.
 function extract_fb_event_links($dom) {
-    // Grab all <a> tags from the event page.
+    // Grab all <a> tags from the group page.
     $linkElems = $dom->getElementsByTagName("a");
     $hrefs = [];
     foreach($linkElems as $link) {
@@ -55,5 +75,18 @@ function extract_fb_event_links($dom) {
         }
     }
     return $hrefs;
+}
+
+// Given an events page, find and extract the event title.
+function extract_fb_event_title($dom) {
+    $loginBarElem = $dom->getElementById('mobile_login_bar');
+    return explode(' is on Facebook', $loginBarElem->textContent)[0];
+}
+
+function extract_fb_event_start_date($dom) {
+    $finder = new DomXPath($dom);
+    $classname = "cs ct v cu cv";
+    $nodes = $finder->query("//*[contains(@class, '$classname')]");
+    return $nodes->item(0)->textContent;
 }
 ?>

@@ -115,6 +115,7 @@ function admin_menu_init()
 			<div id="scraperConsole"></div>
 			<br>
 			<button id="scraperButton">Run Scraper</button>
+			<span id="eventCalendarErrorMsg" class="hidden" style="color:red; margin-left:10px;">Unable to run the scraper. You must install <a href="https://theeventscalendar.com/">The Events Calendar</a> plugin first, then try again.</span>
 		</section>
 		<section>
 			<h2>Settings</h2>
@@ -201,33 +202,46 @@ function admin_menu_init()
 	<script>
 		let scraperConsole = document.getElementById("scraperConsole");
 		let scraperButton = document.getElementById("scraperButton");
+		
+		<?php
+		if (is_plugin_active('the-events-calendar/the-events-calendar.php')) {
+		?>
+			// AJAX call to url-feeder.php to handle the scraping of all urls,
+			// then return the result back.
+			scraperButton.addEventListener("click", (e) => {
+				// Upon click, call url-feeder.php
+				fetch("<?php echo get_site_url() . "/wp-content/plugins/glorious-scraper/url-feeder.php"; ?>", {
+					method: 'GET',
+					headers: {
+						'Content-Type': 'application/json'
+					}
+				})
+				.then(res => res.json())
+				.then(data => {
+					console.log(data);
 
-		// AJAX call to url-feeder.php to handle the scraping of all urls,
-		// then return the result back.
-		scraperButton.addEventListener("click", (e) => {
-			// Upon click, call url-feeder.php
-			fetch("<?php echo get_site_url() . "/wp-content/plugins/glorious-scraper/url-feeder.php"; ?>", {
-				method: 'GET',
-				headers: {
-					'Content-Type': 'application/json'
-				}
-			})
-			.then(res => res.json())
-			.then(data => {
-				console.log(data);
-
-				// Print the text that gets returned to the console in wordpress.
-				if (data.body !== undefined) {
-					let lines = data.body.split(/(\r\n|\n\r|\n|\r)+/g);
-					lines.forEach(line => {
-						writeToConsole(line);
-					})
-				}
-				else {
-					writeToConsole(data);
-				}
+					// Print the text that gets returned to the console in wordpress.
+					if (data.body !== undefined) {
+						let lines = data.body.split(/(\r\n|\n\r|\n|\r)+/g);
+						lines.forEach(line => {
+							writeToConsole(line);
+						})
+					}
+					else {
+						writeToConsole(data);
+					}
+				});
 			});
-		});
+		<?php
+		} else {
+		?>
+			// Display the call to action for installing the event calendar.
+			let eventCalendarErrorElem = document.getElementById("eventCalendarErrorMsg");
+			eventCalendarErrorElem.className = "";
+			scraperButton.disabled = true;
+		<?php
+		}
+		?>
 
 		// scraperConsole is a global
 		function writeToConsole(msg) {
