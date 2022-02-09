@@ -50,9 +50,10 @@ foreach($events as $event) {
     
     $title = extract_fb_event_title($event_dom);
     $datetime = extract_fb_event_datetime($event_dom);
-    $organization = extract_fb_organization($event_dom);
+    $organization = extract_fb_event_organization($event_dom);
 
     $event->set_title($title);
+    $event->set_description(extract_fb_event_description($event_dom));
     $event->set_slug(urlencode($title));
     $event->set_start_date($datetime); // Might need to give the events class this string so that it can extract what it needs from it. Needs: start date, start time, end date, and end time.
     $event->set_location(extract_fb_event_location($event_dom));
@@ -136,7 +137,7 @@ function extract_fb_event_location($dom) {
 }
 
 // Given an events page, find and extract the organization running the event.
-function extract_fb_organization($dom) {
+function extract_fb_event_organization($dom) {
     // //a[contains(@href, '/gloriousrecovery/?ref=page_internal')]
     $finder = new DomXPath($dom);
     //$href = 'https://static.xx.fbcdn.net/rsrc.php/v3/yL/r/HvJ9U6sdYns.png';
@@ -144,8 +145,10 @@ function extract_fb_organization($dom) {
     return $nodes->item(0)->getElementsByTagName('a')->item(0)->textContent; // Find the <a> tag in this container, then extract its text.
 }
 
-function start_date_from_datetime() {
-
+function extract_fb_event_description($dom) {
+    $eventTabsElem = $dom->getElementById('event_tabs');
+    $descriptionContainerElem = $eventTabsElem->childNodes->item(1)->firstChild;
+    return $descriptionContainerElem->childNodes->item(1)->textContent;
 }
 
 // Creates an event in 'the events calendar'.
