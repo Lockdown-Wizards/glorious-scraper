@@ -48,21 +48,32 @@ foreach($events as $event) {
     $event_dom = new DOMDocument();
     @ $event_dom->loadHTML($event_page->body); // @ surpresses any warnings
     
-    $event->set_title(extract_fb_event_title($event_dom));
-    $event->set_start_date(extract_fb_event_start_date($event_dom));
+    $title = extract_fb_event_title($event_dom);
+    $datetime = extract_fb_event_datetime($event_dom);
+    $organization = extract_fb_organization($event_dom);
+
+    $event->set_title($title);
+    $event->set_slug(urlencode($title));
+    $event->set_start_date($datetime); // Might need to give the events class this string so that it can extract what it needs from it. Needs: start date, start time, end date, and end time.
+    $event->set_location(extract_fb_event_location($event_dom));
+    $event->set_image(extract_fb_event_image($event_dom));
+    $event->set_organization($organization);
+    $event->set_featured(get_option('scraper_organization_name') === $organization);
 }
+
+var_dump($events);
 //$event_page = $fbSession->request($url);
 //$postId = (get_post_status(12345678)) ? 'ID' : 'import_id';
 // Reference for the args to put into this array
 // https://docs.theeventscalendar.com/reference/functions/tribe_create_event/
-$eventCreationArgs = [
+/*$eventCreationArgs = [
     "id" => 0, 
     "post_title" => "THIS IS AN OBVIOUS TEST SO JUST LOOK FOR THIS TEXT IN THE DB PLEASE", 
     "EventStartDate" => "2022-08-28 07:00:00", 
     "EventEndDate" => "2022-08-28 09:00:00"
 ];
 $eventCreationRequest = create_event($eventCreationArgs);
-echo json_encode($eventCreationRequest->body);
+echo json_encode($eventCreationRequest->body);*/
 // Check what we received
 //var_dump($request);
 //echo json_encode($page);
@@ -93,11 +104,48 @@ function extract_fb_event_title($dom) {
     return explode(' is on Facebook', $loginBarElem->textContent)[0];
 }
 
-function extract_fb_event_start_date($dom) {
+/*function extract_fb_event_start_date($dom) {
     $finder = new DomXPath($dom);
     $classname = "cs ct v cu cv";
     $nodes = $finder->query("//*[contains(@class, '$classname')]");
     return $nodes->item(0)->textContent;
+}*/
+
+// Given an events page, find and extract the date & time of the event.
+function extract_fb_event_datetime($dom) {
+    $finder = new DomXPath($dom);
+    $imageSrc = 'https://static.xx.fbcdn.net/rsrc.php/v3/yL/r/HvJ9U6sdYns.png';
+    $nodes = $finder->query("//img[contains(@src, '$imageSrc')]");
+    return $nodes->item(0)->parentNode->parentNode->textContent;
+}
+
+// Given an events page, find and extract the event image.
+function extract_fb_event_image($dom) {
+    $eventHeaderElem = $dom->getElementById('event_header');
+    $images = $eventHeaderElem->getElementsByTagName('img');
+    return $images->item(0)->getAttribute("src");
+}
+
+// Given an events page, find and extract the event address.
+function extract_fb_event_location($dom) {
+    $finder = new DomXPath($dom);
+    $imageSrc = 'https://static.xx.fbcdn.net/rsrc.php/v3/y_/r/_gA751gYiTQ.png';
+    $nodes = $finder->query("//img[contains(@src, '$imageSrc')]");
+    $addressElem = $nodes->item(0)->parentNode->parentNode->getElementsByTagName('dd');
+    return $addressElem->item(0)->textContent;
+}
+
+// Given an events page, find and extract the organization running the event.
+function extract_fb_organization($dom) {
+    // //a[contains(@href, '/gloriousrecovery/?ref=page_internal')]
+    $finder = new DomXPath($dom);
+    //$href = 'https://static.xx.fbcdn.net/rsrc.php/v3/yL/r/HvJ9U6sdYns.png';
+    $nodes = $finder->query("//div[contains(text(), '·')]"); // The element which contains the organization name is the only one with '·' in its text.
+    return $nodes->item(0)->getElementsByTagName('a')->item(0)->textContent; // Find the <a> tag in this container, then extract its text.
+}
+
+function start_date_from_datetime() {
+
 }
 
 // Creates an event in 'the events calendar'.

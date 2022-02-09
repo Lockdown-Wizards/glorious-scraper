@@ -119,8 +119,18 @@ function admin_menu_init()
 		</section>
 		<section>
 			<h2>Settings</h2>
+			<h3>Organization Name</h3>
+			<p>When an event with this organization name is found, the scraper will automatically feature the event.</p>
+			<form method="POST" action="../wp-content/plugins/glorious-scraper/set-organization.php">
+				<input value="<?php 
+					// On load, check if an organization has been entered. If so, autofill the input box.
+					$organization_opt = get_option('scraper_organization_name');
+					echo $organization_opt ? $organization_opt : '';
+				?>" placeholder="Organization Name" name="organization" />
+				<input type='submit' href="JavaScript:void(0);" value="Set Organization" />
+			</form>
+			<h3>Scheduled Scrape Time</h3>
 			<form>
-				<h3>Scheduled scrape time</h3>
 				<div>
 					<span>
 						<label for='hours'>Hour:</label>
@@ -254,9 +264,9 @@ function admin_menu_init()
 <?php
 }
 
-function url_table_entry($url)
+function url_table_entry($url) 
 {
-?><tr>
+	?><tr>
 		<td>
 			<form method="post" action="../wp-content/plugins/glorious-scraper/save-all.php">
 				<input class="full-width" value="<?php echo $url->url; ?>" name="url" id="url-table-<?php echo $url->id; ?>" />
@@ -269,8 +279,8 @@ function url_table_entry($url)
 			</form>
 		</td>
 	</tr><?php
-		}
+}
 
-		plugin_name_run();
+plugin_name_run();
 
-			?>
+?>

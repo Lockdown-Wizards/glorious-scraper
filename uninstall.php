@@ -58,6 +58,7 @@ function plugin_name_uninstall() {
 	 */
 	uninstall_table($wpdb->prefix . 'gr_events');
 	uninstall_table($wpdb->prefix . 'gr_fbgroups');
+	delete_option('scraper_organization_name');
 }
 
 function uninstall_table($table_name) {

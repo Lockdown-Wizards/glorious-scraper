@@ -8,8 +8,12 @@ class Event {
     private $description;
     private $start_date;
     private $end_date;
+    private $start_time;
+    private $end_time;
+    private $location;
     private $image;
     private $slug;
+    private $organization;
     private $featured;
 
     function __construct($url) {
@@ -25,8 +29,12 @@ class Event {
         $this->description = "";
         $this->start_date = "";
         $this->end_date = "";
+        $this->start_time = "";
+        $this->end_time = "";
+        $this->location = "";
         $this->image = "";
         $this->slug = "";
+        $this->organization = "";
         $this->featured = "";
     }
     
@@ -81,6 +89,27 @@ class Event {
         $this->end_date = $end_date;
     }
 
+    public function get_start_time() {
+        return $this->start_time;
+    }
+    public function set_start_time($start_time) {
+        $this->start_time = $start_time;
+    }
+
+    public function get_end_time() {
+        return $this->end_time;
+    }
+    public function set_end_time($end_time) {
+        $this->end_time = $end_time;
+    }
+
+    public function get_location() {
+        return $this->location;
+    }
+    public function set_location($location) {
+        $this->location = $location;
+    }
+
     public function get_image() {
         return $this->image;
     }
@@ -93,6 +122,13 @@ class Event {
     }
     public function set_slug($slug) {
         $this->slug = $slug;
+    }
+
+    public function get_organization() {
+        return $this->organization;
+    }
+    public function set_organization($organization) {
+        $this->organization = $organization;
     }
 
     public function get_featured() {
