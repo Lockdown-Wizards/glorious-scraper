@@ -56,7 +56,7 @@ foreach($events as $event) {
 // Reference for the args to put into this array
 // https://docs.theeventscalendar.com/reference/functions/tribe_create_event/
 $eventCreationArgs = [
-    "ID" => 12345678, 
+    "id" => 0, 
     "post_title" => "THIS IS AN OBVIOUS TEST SO JUST LOOK FOR THIS TEXT IN THE DB PLEASE", 
     "EventStartDate" => "2022-08-28 07:00:00", 
     "EventEndDate" => "2022-08-28 09:00:00"
