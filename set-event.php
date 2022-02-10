@@ -38,9 +38,9 @@ if (isset($_POST['args'])) {
 
     // Since it's possible to enter in the wrong ID key in the args array, this code ensures that the ID key will be 'ID' if the post already exists or 'import_id' if the post doesn't yet exist.
     $postIdArg = (get_post_status($postId)) ? 'ID' : 'import_id'; // https://stackoverflow.com/questions/41655064/why-wp-update-post-return-invalid-post-id
-    unset($args['ID']);
+    //unset($args['ID']);
     unset($args['id']);
-    unset($args['import_id']);
+    //unset($args['import_id']);
     $updatedArgs = [$postIdArg => $postId];
     foreach ($args as $key => $arg) {
         if ($arg !== null) {
@@ -52,7 +52,7 @@ if (isset($_POST['args'])) {
     var_dump(tribe_create_event($updatedArgs));
 }
 else {
-    echo 'Args not supplied to the create-event script. Cannot add event to the database. Did you forget to add [\'args\' => $args] as your post request body?';
+    echo 'Args not supplied to the set-event script. Cannot add event to the database. Did you forget to add [\'args\' => $args] as your post request body?';
 }
 
 ?>

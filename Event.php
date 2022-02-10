@@ -138,6 +138,39 @@ class Event {
         $this->featured = $featured;
     }
 
-    // DOM functions for extracting what we need from facebook pages.
+    private function get_meridian($time_str) {
+        return str_contains($time_str, "PM") ? "PM" : "AM";
+    }
 
+    private function get_hour($time_str) {
+        $hour_value = intval(explode(":", $time_str)[0]);
+        return $hour_value < 10 ? ("0" . strval($hour_value)) : strval($hour_value);
+    }
+
+    private function get_minutes($time_str) {
+        return substr(explode(":", $time_str)[1], 0, 2);
+    }
+
+    // DOM functions for extracting what we need from facebook pages.
+    // https://docs.theeventscalendar.com/reference/functions/tribe_create_event/
+    public function to_args() {
+        $facebook_base_url = 'https://www.facebook.com';
+        return [
+            'id' => $this->event_id,
+            'post_title' => $this->title,
+            'EventURL' => $facebook_base_url . $this->url,
+            'post_content' => $this->description,
+            'post_type' => 'tribe_events',
+            'EventStartDate' => $this->start_date,
+            'EventEndDate' => $this->end_date,
+            'EventStartHour' => $this->get_hour($this->start_time),
+            'EventStartMinute' => $this->get_minutes($this->start_time),
+            'EventStartMeridian' => $this->get_meridian($this->start_time),
+            'EventEndHour' => $this->get_hour($this->end_time),
+            'EventEndMinute' => $this->get_minutes($this->end_time),
+            'EventEndMeridian' => $this->get_meridian($this->end_time),
+            'FeaturedImage' => $this->image,
+            'Organizer' => $this->organization
+        ];
+    }
 }

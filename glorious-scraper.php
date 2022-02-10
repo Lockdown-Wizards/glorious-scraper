@@ -219,6 +219,7 @@ function admin_menu_init()
 			// AJAX call to url-feeder.php to handle the scraping of all urls,
 			// then return the result back.
 			scraperButton.addEventListener("click", (e) => {
+				writeToConsole("Now scraping for facebook events. This may take a while, so hang tight and make a cup of tea!");
 				// Upon click, call url-feeder.php
 				fetch("<?php echo get_site_url() . "/wp-content/plugins/glorious-scraper/url-feeder.php"; ?>", {
 					method: 'GET',

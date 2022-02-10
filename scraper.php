@@ -1,8 +1,8 @@
 <?php
 /*
  * The main job of this file is to scrape a given facebook group URL for event links found on the page.
- * Returns an array of Event objects.
- * These event objects will be added to the database in another file.
+ * Returns an array of Event arguments.
+ * These event arguments will be fed into the set-events.php script to add and update events.
  *
 */
 
@@ -69,8 +69,14 @@ foreach($events as $event) {
     $event->set_featured(get_option('scraper_organization_name') === $organization);
 }
 
-//echo $test_page->body;
-var_dump($events);
+// Format the info of each event into an arguments array that's used for the set-event.php script.
+$eventsArgs = [];
+foreach($events as $event) {
+    $eventsArgs[] = $event->to_args();
+}
+
+echo json_encode($eventsArgs);
+
 //$event_page = $fbSession->request($url);
 //$postId = (get_post_status(12345678)) ? 'ID' : 'import_id';
 // Reference for the args to put into this array
@@ -81,7 +87,7 @@ var_dump($events);
     "EventStartDate" => "2022-08-28 07:00:00", 
     "EventEndDate" => "2022-08-28 09:00:00"
 ];
-$eventCreationRequest = create_event($eventCreationArgs);
+$eventCreationRequest = set_event($eventCreationArgs);
 echo json_encode($eventCreationRequest->body);*/
 // Check what we received
 //var_dump($request);
@@ -221,11 +227,5 @@ function is_recurring_event($dom) {
     $finder = new DomXPath($dom);
     $nodes = $finder->query('//div[contains(text(), "Upcoming Dates")]');
     return $nodes->count() > 0;
-}
-
-// Creates an event in 'the events calendar'.
-// Reference to args for this function: https://docs.theeventscalendar.com/reference/functions/tribe_create_event/
-function create_event($args) {
-    return WpOrg\Requests\Requests::post(get_site_url() . "/wp-content/plugins/glorious-scraper/create-event.php", [], ["args" => $args]);
 }
 ?>
