@@ -92,12 +92,10 @@ function plugin_name_run()
 	//$plugin->get_loader()->add_action('admin_menu', $plugin, 'setup_admin_menu');
 	add_action('admin_menu', 'setup_admin_menu');
 
+	// Grab all group URL's from database.
+	$table_name = $wpdb->prefix . "gr_fbgroups";
+	$urls = $wpdb->get_results("SELECT * FROM $table_name");
 
-	// SELECT * FROM wp_gr_scraper_urls and store in $urls
-	// $urls = $wpdb->get_results("SELECT * FROM wp_gr_scraper_urls");
-	// $wpdb->get_results("SELECT * FROM {$wpdb->prefix}author_followers WHERE author_id = $author_id", OBJECT);
-	$urls = $wpdb->get_results("SELECT * FROM wp_gr_scraper_urls");
-	//error_log($urls);
 	$plugin->run();
 }
 
@@ -114,12 +112,25 @@ function admin_menu_init()
 		<h1>Event Scraper</h1>
 		<section>
 			<h2>Actions</h2>
-			<button>Run Scraper</button>
+			<div id="scraperConsole"></div>
+			<br>
+			<button id="scraperButton">Run Scraper</button>
+			<span id="eventCalendarErrorMsg" class="hidden" style="color:red; margin-left:10px;">Unable to run the scraper. You must install <a href="https://theeventscalendar.com/">The Events Calendar</a> plugin first, then try again.</span>
 		</section>
 		<section>
 			<h2>Settings</h2>
+			<h3>Organization Name</h3>
+			<p>When an event with this organization name is found, the scraper will automatically feature the event.</p>
+			<form method="POST" action="../wp-content/plugins/glorious-scraper/set-organization.php">
+				<input value="<?php 
+					// On load, check if an organization has been entered. If so, autofill the input box.
+					$organization_opt = get_option('scraper_organization_name');
+					echo $organization_opt ? $organization_opt : '';
+				?>" placeholder="Organization Name" name="organization" />
+				<input type='submit' href="JavaScript:void(0);" value="Set Organization" />
+			</form>
+			<h3>Scheduled Scrape Time</h3>
 			<form>
-				<h3>Scheduled scrape time</h3>
 				<div>
 					<span>
 						<label for='hours'>Hour:</label>
@@ -198,12 +209,65 @@ function admin_menu_init()
 			</table>
 		</section>
 	</div>
+	<script>
+		let scraperConsole = document.getElementById("scraperConsole");
+		let scraperButton = document.getElementById("scraperButton");
+		
+		<?php
+		if (is_plugin_active('the-events-calendar/the-events-calendar.php')) {
+		?>
+			// AJAX call to url-feeder.php to handle the scraping of all urls,
+			// then return the result back.
+			scraperButton.addEventListener("click", (e) => {
+				writeToConsole("Now scraping for facebook events. This may take a while, so hang tight and make a cup of tea!");
+				// Upon click, call url-feeder.php
+				fetch("<?php echo get_site_url() . "/wp-content/plugins/glorious-scraper/url-feeder.php"; ?>", {
+					method: 'GET',
+					headers: {
+						'Content-Type': 'application/json'
+					}
+				})
+				.then(res => res.json())
+				.then(data => {
+					console.log(data);
+
+					// Print the text that gets returned to the console in wordpress.
+					if (data.body !== undefined) {
+						let lines = data.body.split(/(\r\n|\n\r|\n|\r)+/g);
+						lines.forEach(line => {
+							writeToConsole(line);
+						})
+					}
+					else {
+						writeToConsole(data);
+					}
+				});
+			});
+		<?php
+		} else {
+		?>
+			// Display the call to action for installing the event calendar.
+			let eventCalendarErrorElem = document.getElementById("eventCalendarErrorMsg");
+			eventCalendarErrorElem.className = "";
+			scraperButton.disabled = true;
+		<?php
+		}
+		?>
+
+		// scraperConsole is a global
+		function writeToConsole(msg) {
+			let messageElem = document.createElement("div");
+			messageElem.className = "scraper-console-line";
+			messageElem.innerHTML = msg;
+			scraperConsole.append(messageElem);
+		}
+	</script>
 <?php
 }
 
-function url_table_entry($url)
+function url_table_entry($url) 
 {
-?><tr>
+	?><tr>
 		<td>
 			<form method="post" action="../wp-content/plugins/glorious-scraper/save-all.php">
 				<input class="full-width" value="<?php echo $url->url; ?>" name="url" id="url-table-<?php echo $url->id; ?>" />
@@ -216,8 +280,8 @@ function url_table_entry($url)
 			</form>
 		</td>
 	</tr><?php
-		}
+}
 
-		plugin_name_run();
+plugin_name_run();
 
-			?>
+?>

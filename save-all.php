@@ -6,7 +6,9 @@ $id = $_POST['id'];
 $url = $_POST['url'];
 
 // update the url to the new value
-$wpdb->update("wp_gr_scraper_urls", array('url' => $url), array('id' => $id));
+// Grab all group URL's from database.
+$table_name = $wpdb->prefix . "gr_fbgroups";
+$wpdb->update($table_name, array('url' => $url), array('id' => $id));
 
 error_log($id);
 error_log($url);
