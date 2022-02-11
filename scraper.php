@@ -20,7 +20,7 @@ require_once(__DIR__ . '/Event.php');
 use WpOrg\Requests\Session;
 
 const MBASIC_URL = "https://mbasic.facebook.com";
-const LOGIN_URL = "https://www.facebook.com/login/";
+const NORMAL_URL = "https://www.facebook.com";
 
 // Now let's make a request!
 //$request = WpOrg\Requests\Requests::get('http://httpbin.org/get', ['Accept' => 'application/json']);
@@ -42,12 +42,10 @@ foreach($eventLinks as $eventLink) {
 }
 
 // For every link, scrape it for relevant event info.
-$test_page = null;
 foreach($events as $event) {
     $event_page = $fbSession->request(MBASIC_URL . $event->get_url());
     $event_dom = new DOMDocument();
     @ $event_dom->loadHTML($event_page->body); // @ surpresses any warnings
-    $test_page = $event_page;
 
     $title = extract_fb_event_title($event_dom);
     $description = extract_fb_event_description($event_dom);
@@ -55,18 +53,28 @@ foreach($events as $event) {
     $location = extract_fb_event_location($event_dom);
     $datetime = extract_fb_event_datetime($event_dom);
     $organization = extract_fb_event_organization($event_dom);
+    $organization_url = extract_fb_event_organization_url($event_dom);
 
     $event->set_title($title);
     $event->set_description($description);
     $event->set_slug(urlencode($title));
     $event->set_location($location);
     $event->set_image($image);
-    $event->set_start_date(start_date_from_datetime($datetime)); // Might need to give the events class this string so that it can extract what it needs from it. Needs: start date, start time, end date, and end time.
+    $event->set_start_date(start_date_from_datetime($datetime));
     $event->set_start_time(start_time_from_datetime($datetime));
     $event->set_end_date(end_date_from_datetime($datetime));
     $event->set_end_time(end_time_from_datetime($datetime));
     $event->set_organization($organization);
+    $event->set_organization_url($organization_url);
     $event->set_featured(get_option('scraper_organization_name') === $organization);
+}
+
+foreach($events as $event) {
+    $event_page = $fbSession->request(NORMAL_URL . $event->get_url());
+    $event_dom = new DOMDocument();
+    @ $event_dom->loadHTML($event_page->body); // @ surpresses any warnings
+
+    $event->set_ticket_url(extract_fb_event_ticket_url($event_dom));
 }
 
 // Format the info of each event into an arguments array that's used for the set-event.php script.
@@ -162,11 +170,16 @@ function extract_fb_event_location($dom) {
 
 // Given an events page, find and extract the organization running the event.
 function extract_fb_event_organization($dom) {
-    // //a[contains(@href, '/gloriousrecovery/?ref=page_internal')]
     $finder = new DomXPath($dom);
-    //$href = 'https://static.xx.fbcdn.net/rsrc.php/v3/yL/r/HvJ9U6sdYns.png';
     $nodes = $finder->query("//div[contains(text(), '·')]"); // The element which contains the organization name is the only one with '·' in its text.
     return $nodes->item(0)->getElementsByTagName('a')->item(0)->textContent; // Find the <a> tag in this container, then extract its text.
+}
+
+// Given an events page, find and extract the url to the organization's facebook page.
+function extract_fb_event_organization_url($dom) {
+    $finder = new DomXPath($dom);
+    $nodes = $finder->query("//div[contains(text(), '·')]"); // The element which contains the organization name is the only one with '·' in its text.
+    return $nodes->item(0)->getElementsByTagName('a')->item(0)->getAttribute("href"); // Find the <a> tag in this container, then extract the url.
 }
 
 // Given an events page, find and extract the event description.
@@ -227,5 +240,18 @@ function is_recurring_event($dom) {
     $finder = new DomXPath($dom);
     $nodes = $finder->query('//div[contains(text(), "Upcoming Dates")]');
     return $nodes->count() > 0;
+}
+
+// Requires the normal event page rather than the mbasic event page
+function extract_fb_event_ticket_url($dom) {
+    $finder = new DomXPath($dom);
+    $nodes = $finder->query('//i[contains(@style, \'background-image: url("https://static.xx.fbcdn.net/rsrc.php/v3/y9/r/ffPDAWslkC5.png"); background-position: -44px -246px; background-size: 190px 322px;\')]');
+    if ($nodes->count() > 0) {
+        // This event has tickets that can be purchased.
+        return $nodes->item(0)->parentNode->nextSibling->firstChild->lastChild->textContent;
+    }
+    else {
+        return "";
+    }
 }
 ?>
