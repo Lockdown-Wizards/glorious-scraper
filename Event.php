@@ -4,6 +4,8 @@ class Event {
     private $event_id;
     private $post_id;
     private $url;
+    private $ticket_url;
+    private $organization_url;
     private $title;
     private $description;
     private $start_date;
@@ -25,6 +27,8 @@ class Event {
         }
         $this->post_id = 0;
         $this->url = $url;
+        $this->ticket_url = "";
+        $this->organization_url = "";
         $this->title = "";
         $this->description = "";
         $this->start_date = "";
@@ -59,6 +63,20 @@ class Event {
     }
     public function set_url($url) {
         $this->url = $url;
+    }
+
+    public function get_ticket_url() {
+        return $this->ticket_url;
+    }
+    public function set_ticket_url($ticket_url) {
+        $this->ticket_url = $ticket_url;
+    }
+
+    public function get_organization_url() {
+        return $this->organization_url;
+    }
+    public function set_organization_url($organization_url) {
+        $this->organization_url = $organization_url;
     }
 
     public function get_title() {
@@ -141,14 +159,36 @@ class Event {
     private function get_meridian($time_str) {
         return str_contains($time_str, "PM") ? "PM" : "AM";
     }
-
     private function get_hour($time_str) {
         $hour_value = intval(explode(":", $time_str)[0]);
         return $hour_value < 10 ? ("0" . strval($hour_value)) : strval($hour_value);
     }
-
     private function get_minutes($time_str) {
         return substr(explode(":", $time_str)[1], 0, 2);
+    }
+
+    public function is_online() {
+        return str_contains($this->location, "http");
+    }
+    public function has_tickets() {
+        return $this->ticket_url !== "";
+    }
+
+    private function formatted_description() {
+        $header = "<i>Event by: <a style='color: blue !important' href='https://www.facebook.com".$this->organization_url."' title='".$this->organization."' target='_blank' rel='noopener'>".$this->organization."</a></i>";
+        $fbEvent = "<b>To view this event on Facebook, please <a style=\"color: blue !important\" href=\"http://www.facebook.com".$this->url."\" title=\"View on Facebook\" target=\"_blank\" rel=\"noopener\">click here.</a></b>";
+        $directions = "";
+        if (!$this->is_online()) {
+            $directions = "<b>For directions to this event, please <a style=\"color: blue !important\" href=\"https://maps.google.com/?q=".urlencode($this->location)."\" title=\"Get directions\" target=\"_blank\" rel=\"noopener\">click here.</a></b>";
+        }
+        else {
+            $directions = "<b>This event is online, <a style=\"color: blue !important\" href=\"".$this->location."\" title=\"Get directions\" target=\"_blank\" rel=\"noopener\">click here</a> for the link.</b>";
+        }
+        $tickets = "";
+        if ($this->has_tickets()) {
+            $tickets = "<b>To purchase tickets for ".$this->title.", please <a style=\"color: blue !important\" href=\"".$this->ticket_url."\" title=\"Buy Tickets\" target=\"_blank\" rel=\"noopener\">click here.</a></b>";
+        }
+        return $header . "\n" . $this->description . "\n" . $tickets . "\n" . $directions . "\n" . $fbEvent;
     }
 
     // DOM functions for extracting what we need from facebook pages.
@@ -159,7 +199,7 @@ class Event {
             'id' => $this->event_id,
             'post_title' => $this->title,
             'EventURL' => $facebook_base_url . $this->url,
-            'post_content' => $this->description,
+            'post_content' => $this->formatted_description(),
             'post_type' => 'tribe_events',
             'EventStartDate' => $this->start_date,
             'EventEndDate' => $this->end_date,
