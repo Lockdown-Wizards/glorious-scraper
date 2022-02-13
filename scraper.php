@@ -11,7 +11,7 @@ require_once($_SERVER['DOCUMENT_ROOT'] . '/wordpress/wp-load.php');
 global $wpdb;
 
 // Load in the Requests library: https://github.com/WordPress/Requests
-require_once dirname(__DIR__) . '\\glorious-scraper\\requests\\src\\Autoload.php'; // First, include the Requests Autoloader.
+require_once dirname(__DIR__) . '/glorious-scraper/requests/src/Autoload.php'; // First, include the Requests Autoloader.
 WpOrg\Requests\Autoload::register(); // Next, make sure Requests can load internal classes.
 
 // Load the Event class
@@ -165,7 +165,7 @@ function extract_fb_event_location($dom) {
         $nodes = $finder->query("//img[contains(@src, '$imageSrc')]");
     }
     $addressElem = $nodes->item(0)->parentNode->parentNode->getElementsByTagName('dd');
-    return $addressElem->item(0)->textContent;
+    return $addressElem->item(0)->textContent ?? "";
 }
 
 // Given an events page, find and extract the organization running the event.

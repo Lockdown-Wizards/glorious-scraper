@@ -9,16 +9,16 @@
 require_once($_SERVER['DOCUMENT_ROOT'] . '/wordpress/wp-load.php');
 
 // Load in the Requests library: https://github.com/WordPress/Requests
-require_once dirname(__DIR__) . '\\glorious-scraper\\requests\\src\\Autoload.php'; // First, include the Requests Autoloader.
+require_once dirname(__DIR__) . '/glorious-scraper/requests/src/Autoload.php'; // First, include the Requests Autoloader.
 WpOrg\Requests\Autoload::register(); // Next, make sure Requests can load internal classes.
 
 // Load the events calendar event creation API
-require_once dirname(__DIR__) . '\\the-events-calendar\\src\\functions\\php-min-version.php'; // Load the required php min version functions.
-require_once dirname(__DIR__) . '\\the-events-calendar\\vendor\\autoload.php'; // Load the Composer autoload file.
-require_once dirname(__DIR__) . '\\the-events-calendar\\src\\Tribe\\Main.php'; // Loads 'the events calendar' main
-require_once dirname(__DIR__) . '\\the-events-calendar\\src\\Tribe\\API.php'; // Loads 'the events calendar' api main
+require_once dirname(__DIR__) . '/the-events-calendar/src/functions/php-min-version.php'; // Load the required php min version functions.
+require_once dirname(__DIR__) . '/the-events-calendar/vendor/autoload.php'; // Load the Composer autoload file.
+require_once dirname(__DIR__) . '/the-events-calendar/src/Tribe/Main.php'; // Loads 'the events calendar' main
+require_once dirname(__DIR__) . '/the-events-calendar/src/Tribe/API.php'; // Loads 'the events calendar' api main
 Tribe__Events__Main::instance(); // Create an instance of 'the events calendar' main singleton
-require_once dirname(__DIR__) . '\\the-events-calendar\\src\\functions\\advanced-functions\\event.php'; // Load the script needed to create events.
+require_once dirname(__DIR__) . '/the-events-calendar/src/functions/advanced-functions/event.php'; // Load the script needed to create events.
 
 if (isset($_POST['args'])) {
     // Documentation for all args: https://docs.theeventscalendar.com/reference/functions/tribe_create_event/
