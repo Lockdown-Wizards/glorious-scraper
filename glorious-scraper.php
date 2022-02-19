@@ -258,36 +258,8 @@ function admin_menu_init()
 					} else {
 						writeToConsole("Error: " + request.status);
 					}
-					// request.onreadystatechange = function() {
-					// 	if (this.readyState == 4 && this.status == 200) {
-					// 		writeToConsole(formatMessage(this.responseText));
-					// 		console.log(this.responseText);
-					// 	}
-					// };
 				}
 				writeToConsole("Scraping complete! Have a great day!");
-
-				// // Upon click, call url-feeder.php
-				// fetch("<?php echo get_site_url() . "/wp-content/plugins/glorious-scraper/url-feeder.php"; ?>", {
-				// 		method: 'GET',
-				// 		headers: {
-				// 			'Content-Type': 'application/json'
-				// 		}
-				// 	})
-				// 	.then(res => res.json())
-				// 	.then(data => {
-				// 		console.log(data);
-
-				// 		// Print the text that gets returned to the console in wordpress.
-				// if (data.body !== undefined) {
-				// 	let lines = data.body.split(/(\r\n|\n\r|\n|\r)+/g);
-				// 	lines.forEach(line => {
-				// 		writeToConsole(line);
-				// 	})
-				// } else {
-				// 	writeToConsole(data);
-				// }
-				// 	});
 			});
 		<?php
 		} else {
