@@ -66,7 +66,6 @@ if ($request->status_code === 200) {
         // echo json_encode($actionsTaken);
     }
     // echo json_encode($actionsTaken);
-}
 
 // if ($urls[0] !== null) {
 //     // loop through all the urls and make a request for each one.
