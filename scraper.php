@@ -54,6 +54,7 @@ foreach($events as $event) {
     $datetime = extract_fb_event_datetime($event_dom);
     $organization = extract_fb_event_organization($event_dom);
     $organization_url = extract_fb_event_organization_url($event_dom);
+    $venue = extract_fb_event_venue($event_dom);
 
     $event->set_title($title);
     $event->set_description($description);
@@ -67,6 +68,7 @@ foreach($events as $event) {
     $event->set_organization($organization);
     $event->set_organization_url($organization_url);
     $event->set_featured(get_option('scraper_organization_name') === $organization);
+    $event->set_venue($venue);
 }
 
 foreach($events as $event) {
@@ -253,5 +255,32 @@ function extract_fb_event_ticket_url($dom) {
     else {
         return "";
     }
+}
+
+// Check if this event has a venue. Use https://static.xx.fbcdn.net/rsrc.php/v3/y_/r/_gA751gYiTQ.png as the location pin icon.
+function extract_fb_event_venue($dom) {
+    $finder = new DomXPath($dom);
+    $nodes = $finder->query('//img[contains(@src, \'https://static.xx.fbcdn.net/rsrc.php/v3/y_/r/_gA751gYiTQ.png\')]');
+    if ($nodes->count() > 0) {
+        // The location pin icon was found.
+        $venueElem = $nodes->item(0)->parentNode->parentNode->getElementsByTagName('dt');
+        return $venueElem->item(0)->textContent;
+    }
+    else {
+        // The location pin icon was not found.
+        return "";
+    }
+}
+
+// check if this event has any categories. This requires the normal event page rather than the mbasic event page.
+function extract_fb_event_categories($dom) {
+    $finder = new DomXPath($dom);
+    $nodes = $finder->query('//a[contains(@href, \'/events/discovery\')]');
+    $categories = [];
+    foreach ($nodes as $node) {
+        $categories[] = $node->textContent;
+    }
+    $categories[] = "test";
+    return $categories;
 }
 ?>

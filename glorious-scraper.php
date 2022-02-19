@@ -112,7 +112,10 @@ function admin_menu_init()
 		<h1>Event Scraper</h1>
 		<section>
 			<h2>Actions</h2>
-			<div id="scraperConsole"></div>
+			<div id="scraperConsole">
+				<ul id="scraperConsoleUl">
+				</ul>
+			</div>
 			<br>
 			<button id="scraperButton">Run Scraper</button>
 			<span id="eventCalendarErrorMsg" class="hidden" style="color:red; margin-left:10px;">Unable to run the scraper. You must install <a href="https://theeventscalendar.com/">The Events Calendar</a> plugin first, then try again.</span>
@@ -122,11 +125,11 @@ function admin_menu_init()
 			<h3>Organization Name</h3>
 			<p>When an event with this organization name is found, the scraper will automatically feature the event.</p>
 			<form method="POST" action="../wp-content/plugins/glorious-scraper/set-organization.php">
-				<input value="<?php 
-					// On load, check if an organization has been entered. If so, autofill the input box.
-					$organization_opt = get_option('scraper_organization_name');
-					echo $organization_opt ? $organization_opt : '';
-				?>" placeholder="Organization Name" name="organization" />
+				<input value="<?php
+								// On load, check if an organization has been entered. If so, autofill the input box.
+								$organization_opt = get_option('scraper_organization_name');
+								echo $organization_opt ? $organization_opt : '';
+								?>" placeholder="Organization Name" name="organization" />
 				<input type='submit' href="JavaScript:void(0);" value="Set Organization" />
 			</form>
 			<h3>Scheduled Scrape Time</h3>
@@ -212,36 +215,79 @@ function admin_menu_init()
 	<script>
 		let scraperConsole = document.getElementById("scraperConsole");
 		let scraperButton = document.getElementById("scraperButton");
-		
+
 		<?php
 		if (is_plugin_active('the-events-calendar/the-events-calendar.php')) {
 		?>
+			/*
+				Takes the message in the form:
+				[{"id":"530192818301298","post_title":"CSO Gala ~ An Enchanted Evening","EventURL":"https:\/\/www.facebook.com\/events\/530192818301298","post_content":"Event by: Community Speaks Out<\/a><\/i>\nWe have a new date and venue! July 30th at the Mashantucket Pequot Museum and Research Center. This is a major fundraiser for our organization. The Gala is a night of dinner, dancing, online auction and presentations about CSO. We have sponsorship opportunities and welcome auction item and gift card donations. Purchase your tickets before May 1st and your name will be entered into a drawing for $100 gift certificate to Dog Watch Cafe! For more information about the event and to purchase tickets: https:\/\/CSOGala2022.givesmart.com\n\nFor directions to this event, please click here.<\/a><\/b>\nTo view this event on Facebook, please click here.<\/a><\/b>","post_type":"tribe_events","EventStartDate":"Saturday, July 30, 2022","EventEndDate":"Saturday, July 30, 2022","EventStartHour":"06","EventStartMinute":"00","EventStartMeridian":"PM","EventEndHour":"11","EventEndMinute":"00","EventEndMeridian":"PM","FeaturedImage":"https:\/\/scontent-bos3-1.xx.fbcdn.net\/v\/t39.30808-6\/fr\/cp0\/e15\/q65\/273936784_5078627658825358_4568355614301083006_n.jpg?_nc_cat=111&ccb=1-5&_nc_sid=ed5ff1&_nc_ohc=W5XlDn8_p4sAX9_3sAR&_nc_ht=scontent-bos3-1.xx&oh=00_AT_iksrXS3k8AB7OJdzmNnpfAbutWn_VG_cQCp3pMvGFeA&oe=6216B109","Organizer":"Community Speaks Out","post_category":[],"Venue":"Mashantucket Pequot Museum & Research Center","comment_status":"open"}]
+
+				Extracts the post_title and returns "Draft set for <post_title>"
+			*/
+			function formatMessage(message) {
+				let json = JSON.parse(message);
+				let post_title = json[0].post_title;
+				return "Draft set for " + post_title;
+			}
+
 			// AJAX call to url-feeder.php to handle the scraping of all urls,
 			// then return the result back.
 			scraperButton.addEventListener("click", (e) => {
 				writeToConsole("Now scraping for facebook events. This may take a while, so hang tight and make a cup of tea!");
-				// Upon click, call url-feeder.php
-				fetch("<?php echo get_site_url() . "/wp-content/plugins/glorious-scraper/url-feeder.php"; ?>", {
-					method: 'GET',
-					headers: {
-						'Content-Type': 'application/json'
-					}
-				})
-				.then(res => res.json())
-				.then(data => {
-					console.log(data);
+				// <?php $urls; ?>
+				// call url-feeder.php for each url. Thr urls are stored with the class "table-url-value"
+				let urls = document.getElementsByClassName("table-url-value");
+				let urlsArray = [];
+				for (let i = 0; i < urls.length; i++) {
+					urlsArray.push(urls[i].value);
+				}
+				for (let i = 0; i < urlsArray.length; i++) {
+					console.log(urlsArray[i]);
+					writeToConsole("Now scraping " + urlsArray[i] + " (" + (i + 1) + " of " + urlsArray.length + ")" + "...");
 
-					// Print the text that gets returned to the console in wordpress.
-					if (data.body !== undefined) {
-						let lines = data.body.split(/(\r\n|\n\r|\n|\r)+/g);
-						lines.forEach(line => {
-							writeToConsole(line);
-						})
+					let request = new XMLHttpRequest();
+					request.open("POST", "../wp-content/plugins/glorious-scraper/url-feeder.php", false); // false for synchronous request, true for asynchronous
+					request.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+					request.send("url=" + urlsArray[i]);
+
+					if (request.status === 200) {
+						let response = request.responseText;
+						let message = formatMessage(response);
+						writeToConsole(message);
+					} else {
+						writeToConsole("Error: " + request.status);
 					}
-					else {
-						writeToConsole(data);
-					}
-				});
+					// request.onreadystatechange = function() {
+					// 	if (this.readyState == 4 && this.status == 200) {
+					// 		writeToConsole(formatMessage(this.responseText));
+					// 		console.log(this.responseText);
+					// 	}
+					// };
+				}
+				writeToConsole("Scraping complete! Have a great day!");
+
+				// // Upon click, call url-feeder.php
+				// fetch("<?php echo get_site_url() . "/wp-content/plugins/glorious-scraper/url-feeder.php"; ?>", {
+				// 		method: 'GET',
+				// 		headers: {
+				// 			'Content-Type': 'application/json'
+				// 		}
+				// 	})
+				// 	.then(res => res.json())
+				// 	.then(data => {
+				// 		console.log(data);
+
+				// 		// Print the text that gets returned to the console in wordpress.
+				// if (data.body !== undefined) {
+				// 	let lines = data.body.split(/(\r\n|\n\r|\n|\r)+/g);
+				// 	lines.forEach(line => {
+				// 		writeToConsole(line);
+				// 	})
+				// } else {
+				// 	writeToConsole(data);
+				// }
+				// 	});
 			});
 		<?php
 		} else {
@@ -265,12 +311,12 @@ function admin_menu_init()
 <?php
 }
 
-function url_table_entry($url) 
+function url_table_entry($url)
 {
-	?><tr>
+?><tr>
 		<td>
 			<form method="post" action="../wp-content/plugins/glorious-scraper/save-all.php">
-				<input class="full-width" value="<?php echo $url->url; ?>" name="url" id="url-table-<?php echo $url->id; ?>" />
+				<input class="full-width table-url-value" value="<?php echo $url->url; ?>" name="url" id="url-table-<?php echo $url->id; ?>" />
 				<input style="display: none;" value="<?php echo $url->id; ?>" name="id" />
 				<input type="submit" value="Update" />
 			</form>
@@ -280,8 +326,8 @@ function url_table_entry($url)
 			</form>
 		</td>
 	</tr><?php
-}
+		}
 
-plugin_name_run();
+		plugin_name_run();
 
-?>
+			?>

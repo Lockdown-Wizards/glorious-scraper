@@ -1,8 +1,8 @@
 <?php
 /*
- * Utilizes 'the events calendar' API to create or update an event that will appear under the events tab.
- * Specify 'id' => 0 in the args array to create a new event.
- * Otherwise, give a specific id and this will update the already existing event.
+ * Utilizes 'the events calendar' API to create or update a venue that will appear under the events tab.
+ * Specify 'id' => 0 in the args array to create a new venue.
+ * Otherwise, give a specific id and this will update the already existing venue.
 */
 
 // Access the wordpress database
@@ -18,7 +18,7 @@ require_once dirname(__DIR__) . '/the-events-calendar/vendor/autoload.php'; // L
 require_once dirname(__DIR__) . '/the-events-calendar/src/Tribe/Main.php'; // Loads 'the events calendar' main
 require_once dirname(__DIR__) . '/the-events-calendar/src/Tribe/API.php'; // Loads 'the events calendar' api main
 Tribe__Events__Main::instance(); // Create an instance of 'the events calendar' main singleton
-require_once dirname(__DIR__) . '/the-events-calendar/src/functions/advanced-functions/event.php'; // Load the script needed to create events.
+require_once dirname(__DIR__) . '/the-events-calendar/src/functions/advanced-functions/venue.php'; // load the script needed to create venues.
 
 if (isset($_POST['args'])) {
     $args = $_POST['args']; // https://docs.theeventscalendar.com/reference/functions/tribe_create_event/
@@ -54,5 +54,3 @@ if (isset($_POST['args'])) {
 else {
     echo 'Args not supplied to the set-event script. Cannot add event to the database. Did you forget to add [\'args\' => $args] as your post request body?';
 }
-
-?>
