@@ -218,12 +218,9 @@ function admin_menu_init()
 		</section>
 	</div>
 	<?php
-	if (is_plugin_active('the-events-calendar/the-events-calendar.php')) {
+	if (!is_plugin_active('the-events-calendar/the-events-calendar.php')) {
 	?>
-		<script src="../wp-content/plugins/glorious-scraper/scrape-all.js"></script>
-	<?php
-	} else {
-	?>
+		<!--<script src="../wp-content/plugins/glorious-scraper/scrape-all.js"></script>-->
 		<script src="../wp-content/plugins/glorious-scraper/missing-events-calendar.js"></script>
 	<?php
 	}

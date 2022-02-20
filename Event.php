@@ -273,7 +273,7 @@ class Event
             'FeaturedImage' => $this->image,
             'Organizer' => $this->organization,
             'post_category' => $this->category,
-            'Venue' => $this->venue,
+            //'Venue' => $this->venue,
             'comment_status' => 'open',
         ];
     }
