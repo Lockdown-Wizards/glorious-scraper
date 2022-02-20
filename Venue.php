@@ -7,7 +7,6 @@ class Venue
     private $country;
     private $city;
     private $state;
-    private $title;
     private $province;
     private $zip;
     private $phone;
@@ -75,15 +74,6 @@ class Venue
     public function set_state($state)
     {
         return $this->state = $state;
-    }
-
-    public function get_title()
-    {
-        return $this->title;
-    }
-    public function set_title($title)
-    {
-        $this->title = $title;
     }
 
     public function get_province()
