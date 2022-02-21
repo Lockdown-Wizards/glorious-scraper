@@ -92,6 +92,10 @@ function plugin_name_run()
 	//$plugin->get_loader()->add_action('admin_menu', $plugin, 'setup_admin_menu');
 	add_action('admin_menu', 'setup_admin_menu');
 
+	// For cron job
+	add_action( 'gloriousrecovery_cronjob_hook', 'gr_cronjob' );
+	date_default_timezone_set('America/New_York');
+
 	// Grab all group URL's from database.
 	$table_name = $wpdb->prefix . "gr_fbgroups";
 	$urls = $wpdb->get_results("SELECT * FROM $table_name");
@@ -113,6 +117,28 @@ function localize_urls() {
 	wp_enqueue_script('glorious_scraper', plugin_dir_url( __FILE__ ) . 'scrape-all.js');
 	wp_localize_script('glorious_scraper', 'gloriousData', ['urls' => $urls]);
 }
+
+
+function gr_cronjob() {
+	// This should be doing the actual cronjob
+
+	/*
+	// false if no event scheduled, otherwise returns timestamp
+	$gr_next_cronjob = wp_next_scheduled( 'gloriousrecovery_cronjob_hook' );
+
+	// cronjob is scheduled
+	if ( ! $gr_next_cronjob ) {
+		wp_schedule_event( time(), 'daily', 'gloriousrecovery_cronjob_hook' );
+	}
+	// cronjob is not scheduled yet
+	else {
+		
+	}
+
+	wp_schedule_event( time(), 'daily', 'gloriousrecovery_cronjob_hook' );
+	*/
+}
+
 
 function admin_menu_init()
 {
@@ -138,58 +164,107 @@ function admin_menu_init()
 				<input value="<?php
 								// On load, check if an organization has been entered. If so, autofill the input box.
 								$organization_opt = get_option('scraper_organization_name');
-								echo $organization_opt ? $organization_opt : '';
+								$organization_opt ? $organization_opt : '';
 								?>" placeholder="Organization Name" name="organization" />
 				<input type='submit' href="JavaScript:void(0);" value="Set Organization" />
 			</form>
 			<h3>Scheduled Scrape Time</h3>
-			<form>
+			<form method="POST" action="../wp-content/plugins/glorious-scraper/set-cronjob.php">
+				<?php  
+					// False for not scheduled, otherwise returns timestamp
+					$gr_next_cronjob = wp_next_scheduled( 'gloriousrecovery_cronjob_hook' );
+					echo $gr_next_cronjob . " " . gettype($gr_next_cronjob) ."<br>";
+					if($gr_next_cronjob) {
+
+						$gr_timezone_here = new DateTimeZone(date_default_timezone_get());
+						$gr_timezone_GMT = new DateTimeZone("Europe/London");
+						$gr_datetime_here = new DateTime("now", $gr_timezone_here);
+						$gr_datetime_GMT = new DateTime("now", $gr_timezone_GMT);
+
+						echo "Now here: " . $gr_datetime_here->format('Y-m-d H:i:s') . "<br>";
+						echo "Now GMT:  " . $gr_datetime_GMT->format('Y-m-d H:i:s') . "<br>";
+
+						$gr_datetime_offset = timezone_offset_get($gr_timezone_here, $gr_datetime_GMT );
+						echo "offset:  " . $gr_datetime_offset . "<br>";
+
+
+						$gr_next_cronjob += $gr_datetime_offset;
+						
+
+						$gr_current_hour =  floor(($gr_next_cronjob % 86400)/(3600)); // hours after midnight
+						$gr_current_minutes = floor(($gr_next_cronjob % 3600)/(60)); // minutes after the hour
+
+						echo $gr_current_hour ."<br>";
+						echo $gr_current_minutes ."<br>";
+
+					}
+					else {
+						$gr_current_hour =  0;
+						$gr_current_minutes = 0;
+					}
+				?>
 				<div>
 					<span>
 						<label for='hours'>Hour:</label>
-						<select id='hours'>
-							<option value='00'>00</option>
-							<option value='01'>01</option>
-							<option value='02'>02</option>
-							<option value='03'>03</option>
-							<option value='04'>04</option>
-							<option value='05'>05</option>
-							<option value='06'>06</option>
-							<option value='07'>07</option>
-							<option value='08'>08</option>
-							<option value='09'>09</option>
-							<option value='10'>10</option>
-							<option value='11'>11</option>
-							<option value='12'>12</option>
-							<option value='13'>13</option>
-							<option value='14'>14</option>
-							<option value='15'>15</option>
-							<option value='16'>16</option>
-							<option value='17'>17</option>
-							<option value='18'>18</option>
-							<option value='19'>19</option>
-							<option value='20'>20</option>
-							<option value='21'>21</option>
-							<option value='22'>22</option>
-							<option value='23'>23</option>
+						<select name='hours' id='hours'>
+						<?php
+							for ($i = 0; $i <= 23; $i++) {
+								if($i == (int) $gr_current_hour) {
+									if ($i < 10) {
+										echo "<option value='0$i' selected>0$i</option>";
+									}
+									else {
+										echo "<option value='$i' selected>$i</option>";
+									}
+								}
+								else {
+									if ($i < 10) {
+										echo "<option value='0$i'>0$i</option>";
+									}
+									else {
+										echo "<option value='$i'>$i</option>";
+									}
+								}
+							}
+							?>
 						</select>
 					</span>
 					<span>
 						<label for='minutes'>Minute:</label>
-						<select id='minutes'>
-							<option value='00'>00</option>
-							<option value='05'>05</option>
-							<option value='10'>10</option>
-							<option value='15'>15</option>
-							<option value='20'>20</option>
-							<option value='25'>25</option>
-							<option value='30'>30</option>
-							<option value='35'>35</option>
-							<option value='40'>40</option>
-							<option value='45'>45</option>
-							<option value='50'>50</option>
-							<option value='55'>55</option>
+						<select name='minutes' id='minutes'>
+
+						<?php
+							for ($i = 0; $i <= 11; $i++) {
+								$j = $i * 5;
+
+								// Make sure it is selected
+								if($j == (int) $gr_current_minutes) {
+									if ($j < 10)
+										echo "<option value='0$j' selected>0$j</option>";
+									else 
+										echo "<option value='$j' selected>$j</option>";
+								}
+								else {
+									if ($j < 10)
+										echo "<option value='0$j'>0$j</option>";
+									else 
+										echo "<option value='$j'>$j</option>";
+								}
+							}
+							?>
 						</select>
+					</span>
+					<!-- Need to check which is selected to begin... -->
+					<br>
+					<span> 
+						<input type="radio" id="cronChoice1" name="cronjobRecurrence" value="none">
+						<label for="cronChoice1">None</label>
+
+						<input type="radio" id="cronChoice2" name="cronjobRecurrence" value="daily">
+						<label for="cronChoice2">Daily</label>
+
+						<input type="radio" id="cronChoice3" name="cronjobRecurrence" value="twicedaily">
+						<label for="cronChoice3">Twice Daily</label>
 					</span>
 				</div>
 				<br>
