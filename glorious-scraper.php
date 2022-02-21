@@ -94,7 +94,6 @@ function plugin_name_run()
 
 	// For cron job
 	add_action( 'gloriousrecovery_cronjob_hook', 'gr_cronjob' );
-	date_default_timezone_set('America/New_York');
 
 	// Grab all group URL's from database.
 	$table_name = $wpdb->prefix . "gr_fbgroups";
@@ -122,21 +121,7 @@ function localize_urls() {
 function gr_cronjob() {
 	// This should be doing the actual cronjob
 
-	/*
-	// false if no event scheduled, otherwise returns timestamp
-	$gr_next_cronjob = wp_next_scheduled( 'gloriousrecovery_cronjob_hook' );
-
-	// cronjob is scheduled
-	if ( ! $gr_next_cronjob ) {
-		wp_schedule_event( time(), 'daily', 'gloriousrecovery_cronjob_hook' );
-	}
-	// cronjob is not scheduled yet
-	else {
-		
-	}
-
-	wp_schedule_event( time(), 'daily', 'gloriousrecovery_cronjob_hook' );
-	*/
+	// abc
 }
 
 
@@ -156,6 +141,7 @@ function admin_menu_init()
 			<button id="scraperButton">Run Scraper</button>
 			<span id="eventCalendarErrorMsg" class="hidden" style="color:red; margin-left:10px;">Unable to run the scraper. You must install <a href="https://theeventscalendar.com/">The Events Calendar</a> plugin first, then try again.</span>
 		</section>
+
 		<section>
 			<h2>Settings</h2>
 			<h3>Organization Name</h3>
@@ -168,34 +154,35 @@ function admin_menu_init()
 								?>" placeholder="Organization Name" name="organization" />
 				<input type='submit' href="JavaScript:void(0);" value="Set Organization" />
 			</form>
+
 			<h3>Scheduled Scrape Time</h3>
 			<form method="POST" action="../wp-content/plugins/glorious-scraper/set-cronjob.php">
 				<?php  
 					// False for not scheduled, otherwise returns timestamp
 					$gr_next_cronjob = wp_next_scheduled( 'gloriousrecovery_cronjob_hook' );
-					echo $gr_next_cronjob . " " . gettype($gr_next_cronjob) ."<br>";
-					if($gr_next_cronjob) {
+					// echo $gr_next_cronjob . " " . gettype($gr_next_cronjob) ."<br>";
+					
+					// Used for Radio button section (cronjob recurrences)
+					$gr_cronjob_current_schedule = wp_get_schedule('gloriousrecovery_cronjob_hook');	
 
-						$gr_timezone_here = new DateTimeZone(date_default_timezone_get());
+					if($gr_next_cronjob) {
+						$gr_timezone_here = new DateTimeZone('America/New_York');
 						$gr_timezone_GMT = new DateTimeZone("Europe/London");
 						$gr_datetime_here = new DateTime("now", $gr_timezone_here);
 						$gr_datetime_GMT = new DateTime("now", $gr_timezone_GMT);
-
-						echo "Now here: " . $gr_datetime_here->format('Y-m-d H:i:s') . "<br>";
-						echo "Now GMT:  " . $gr_datetime_GMT->format('Y-m-d H:i:s') . "<br>";
+						// echo "Now here: " . $gr_datetime_here->format('Y-m-d H:i:s') . "<br>";
+						// echo "Now GMT:  " . $gr_datetime_GMT->format('Y-m-d H:i:s') . "<br>";
 
 						$gr_datetime_offset = timezone_offset_get($gr_timezone_here, $gr_datetime_GMT );
-						echo "offset:  " . $gr_datetime_offset . "<br>";
-
-
+						//echo "offset:  " . $gr_datetime_offset . "<br>";
 						$gr_next_cronjob += $gr_datetime_offset;
 						
-
-						$gr_current_hour =  floor(($gr_next_cronjob % 86400)/(3600)); // hours after midnight
+						$gr_current_hour_24h = floor(($gr_next_cronjob % 86400)/(3600));
+						$gr_current_hour = $gr_cronjob_current_schedule == 'twicedaily' ? $gr_current_hour_24h % 12 : $gr_current_hour_24h ; // hours after midnight
 						$gr_current_minutes = floor(($gr_next_cronjob % 3600)/(60)); // minutes after the hour
 
-						echo $gr_current_hour ."<br>";
-						echo $gr_current_minutes ."<br>";
+						// echo $gr_current_hour ."<br>";
+						// echo $gr_current_minutes ."<br>";
 
 					}
 					else {
@@ -256,19 +243,20 @@ function admin_menu_init()
 					</span>
 					<!-- Need to check which is selected to begin... -->
 					<br>
+					<br>
 					<span> 
-						<input type="radio" id="cronChoice1" name="cronjobRecurrence" value="none">
+						<input type="radio" id="cronChoice1" name="cronjobRecurrence" value="none" <?php if(!$gr_cronjob_current_schedule) echo "checked" ?>>
 						<label for="cronChoice1">None</label>
 
-						<input type="radio" id="cronChoice2" name="cronjobRecurrence" value="daily">
+						<input type="radio" id="cronChoice2" name="cronjobRecurrence" value="daily" <?php if($gr_cronjob_current_schedule == 'daily') echo "checked" ?>>
 						<label for="cronChoice2">Daily</label>
 
-						<input type="radio" id="cronChoice3" name="cronjobRecurrence" value="twicedaily">
+						<input type="radio" id="cronChoice3" name="cronjobRecurrence" value="twicedaily" <?php if($gr_cronjob_current_schedule == 'twicedaily') echo "checked" ?>>
 						<label for="cronChoice3">Twice Daily</label>
 					</span>
 				</div>
 				<br>
-				<input type='submit' value='Save Settings' />
+				<input type='submit' href="JavaScript:void(0);" value='Save Settings' />
 			</form>
 
 			<h3>Saved URLs</h3>
