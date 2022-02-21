@@ -5,7 +5,7 @@ require_once($_SERVER['DOCUMENT_ROOT'] . '/wordpress/wp-load.php');
 $opt_name = 'scraper_organization_name';
 $organization = $_POST['organization'];
 $organization_opt = get_option($opt_name);
-if ($organization_opt) {
+if ($organization_opt) {    
     // The option exists in the database. Use update function.
     update_option($opt_name, $organization);
 }

@@ -120,8 +120,40 @@ function localize_urls() {
 
 function gr_cronjob() {
 	// This should be doing the actual cronjob
+	global $urls;
 
-	// abc
+	if ($urls[0] !== null) {
+		// loop through all the urls and make a request for each one.
+		foreach ($urls as $url) {
+			error_log(json_encode("Now scraping: " . $url->url));
+			
+			// testing?
+			$request = WpOrg\Requests\Requests::post(get_site_url() . "/wp-content/plugins/glorious-scraper/scraper.php", [], ['url' => $url]);
+			
+			// original
+			// $request = WpOrg\Requests\Requests::post(get_site_url() . "/wp-content/plugins/glorious-scraper/scraper.php", [], ['url' => $url->url]);
+			
+			
+			// If the request was successful, then echo the request's body.
+			if ($request->status_code === 200) {
+				echo $request->body;
+				// error_log(json_encode($request->body)); // Uncomment this line to see the request's body.
+	
+				// Add each event to 'the events calendar' plugin.
+				$eventsArgs = json_decode($request->body);
+				$actionsTaken = ""; // Shows what events have been saved as drafts in 'the events calendar' plugin.
+				foreach ($eventsArgs as $args) {
+					$postId = set_event($args);
+					$actionsTaken .= "Draft set for '" . $args->post_title . "' with event id: " . $args->id . "\n";
+					
+					error_log(json_encode($actionsTaken));
+					echo json_encode($actionsTaken);
+				}
+				// echo json_encode($actionsTaken);
+			}
+			error_log("done");
+		}
+	}
 }
 
 
