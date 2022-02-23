@@ -262,7 +262,7 @@ class Event
             'EventEndMeridian' => $this->get_meridian($this->end_time),
             'FeaturedImage' => $this->image,
             'Organizer' => $this->organization,
-            'post_category' => $this->category,
+            'post_category' => $this->category, // Needs to be replaced with category IDs.
             'comment_status' => 'open',
         ];
     }

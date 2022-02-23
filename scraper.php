@@ -76,12 +76,19 @@ foreach($events as $i => $event) {
     $event->set_featured(get_option('scraper_organization_name') === $organization);
 
     $location_title = extract_fb_location_title($event_dom);
+    $street = $city = $state = $zip = "";
+    if (!location_is_online($location)) {
+        $street = street_from_location($location);
+        $city = city_from_location($location);
+        $state = state_from_location($location);
+        $zip = zip_from_location($location);
+    }
 
     $venues[$i]->set_title($location_title);
-    //$venues[$i]->set_address();
-    //$venues[$i]->set_city();
-    //$venues[$i]->set_state();
-    //$venues[$i]->set_zip();
+    $venues[$i]->set_address($street);
+    $venues[$i]->set_city($city);
+    $venues[$i]->set_state($state);
+    $venues[$i]->set_zip($zip);
 }
 
 foreach($events as $event) {
@@ -184,6 +191,32 @@ function extract_fb_event_location($dom) {
     }
     $addressElem = $nodes->item(0)->parentNode->parentNode->getElementsByTagName('dd');
     return $addressElem->item(0)->textContent ?? "";
+}
+
+// Given a location extracted from the event page, extract the street name and number.
+function street_from_location($location) {
+    return trim(explode(",", $location)[0]);
+}
+
+// Given a location extracted from the event page, extract the city name.
+function city_from_location($location) {
+    return trim(explode(",", $location)[1]);
+}
+
+// Given a location extracted from the event page, extract the state name.
+function state_from_location($location) {
+    $stateAndZip = trim(explode(",", $location)[2]); // State is on the left of the space, zipcode is on the right of the space.
+    return explode(" ", $stateAndZip)[0];
+}
+
+// Given a location extracted from the event page, extract the zip code.
+function zip_from_location($location) {
+    $stateAndZip = trim(explode(",", $location)[2]); // State is on the left of the space, zipcode is on the right of the space.
+    return explode(" ", $stateAndZip)[1];
+}
+
+function location_is_online($location) {
+    return str_contains($location, "http");
 }
 
 // Given an events page, find and extract the organization running the event.

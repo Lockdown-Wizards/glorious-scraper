@@ -52,19 +52,19 @@ if (isset($_POST['args'])) {
     */ 
 
     // Every venue needs a title. Check if we have a title for this venue.
-    if (!isset($args['Venue'])) { 
-        echo "Venue not set. Missing venue title.";
+    if (!isset($args['Venue']) || $args['Venue'] === "") { 
+        echo json_encode(false); // Missing venue title. This could be because the event is online.
         exit();
     }
 
     // Find a venue that matches the venue name from the args array.
     $posts_table_name = $wpdb->prefix . "posts";
     $postmeta_table_name = $wpdb->prefix . "postmeta";
-    $sql = `SELECT $posts_table_name.ID, $posts_table_name.post_title, $postmeta_table_name.meta_key, $postmeta_table_name.meta_value 
+    $sql = "SELECT $posts_table_name.ID, $posts_table_name.post_title, $postmeta_table_name.meta_key, $postmeta_table_name.meta_value
             FROM $posts_table_name
             INNER JOIN $postmeta_table_name ON $postmeta_table_name.post_id = $posts_table_name.ID 
             WHERE $postmeta_table_name.meta_key LIKE '_Venue%' 
-            AND $posts_table_name.post_title = '`.$args['Venue'].`';`;
+            AND $posts_table_name.post_title = '".$args['Venue']."';";
     $results = $wpdb->get_results($sql); // Contains results for a Venue with a title that matches the one given in the args array ($args['Venue']).
     
     // Detect whether or not the venue found in the database matches with the one outlined in the args array.
@@ -73,13 +73,13 @@ if (isset($_POST['args'])) {
     $hasMatchingState = false;
     foreach ($results as $metadata) {
         if ($metadata->meta_key === '_VenueAddress') {
-            $hasMatchingAddress = $metadata->meta_key === $args['Address'];
+            $hasMatchingAddress = $metadata->meta_value === $args['Address'];
         }
         else if ($metadata->meta_key === '_VenueCity') {
-            $hasMatchingCity = $metadata->meta_key === $args['City'];
+            $hasMatchingCity = $metadata->meta_value === $args['City'];
         }
         else if ($metadata->meta_key === '_VenueState') {
-            $hasMatchingState = $metadata->meta_key === $args['State'];
+            $hasMatchingState = $metadata->meta_value === $args['State'];
         }
     }
     $hasMatchingVenue = $hasMatchingAddress && $hasMatchingCity && $hasMatchingState;
@@ -95,7 +95,8 @@ if (isset($_POST['args'])) {
         echo json_encode(tribe_create_venue($args));
     }
     else {
-        echo json_encode(tribe_update_venue($postId, $args));
+        tribe_update_venue($postId, $args);
+        echo json_encode(false);
     }
 }
 else {

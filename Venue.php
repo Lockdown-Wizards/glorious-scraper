@@ -4,6 +4,7 @@ class Venue
 {
     private $title;
     private $country;
+    private $address;
     private $city;
     private $state;
     private $province;
@@ -14,6 +15,7 @@ class Venue
     {
         $this->title = "";
         $this->country = "United States";
+        $this->address = "";
         $this->city = "";
         $this->state = "";
         $this->title = "";
@@ -103,7 +105,7 @@ class Venue
             'Country' => $this->country,
             'City' => $this->city,
             'State' => $this->state,
-            'Address' => $this->title,
+            'Address' => $this->address,
             'Province' => $this->province,
             'Zip' => $this->zip,
             'Phone' => $this->phone,
