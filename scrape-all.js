@@ -20,19 +20,20 @@ window.addEventListener("DOMContentLoaded", () => {
                 // Scrape all events from the url
                 let formData = new FormData();
                 formData.append("url", urlData.url);
-                postForm("../wp-content/plugins/glorious-scraper/scraper.php", formData).then((allEventArgs) => {
+                postForm("../wp-content/plugins/glorious-scraper/scraper.php", formData).then((allArgs) => {
                     //console.log(allEventArgs);
                     // For each event, set the event in the events calendar
-                    allEventArgs.forEach((eventArgs) => {
-                        //console.log(eventArgs);
+                    allArgs.forEach((args) => {
+                        // args is an array containing both event and venue arguments for one event.
+                        console.log(args);
                         let eventFormData = new FormData();
-                        eventFormData.append("args", JSON.stringify(eventArgs));
+                        eventFormData.append("args", JSON.stringify(args.event));
                         //console.log(JSON.stringify(eventArgs));
                         postForm("../wp-content/plugins/glorious-scraper/set-event.php", eventFormData).then(
                             (eventCreationId) => {
                                 //console.log(eventCreationId);
                                 writeToConsole(
-                                    `(${eventArgs.Organizer}) Draft set for '${eventArgs.post_title}' with event id: ${eventCreationId}\n`
+                                    `(${args.event.Organizer}) Draft set for '${args.event.post_title}' with event id: ${eventCreationId}\n`
                                 );
                             }
                         );

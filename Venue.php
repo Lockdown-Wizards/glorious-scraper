@@ -2,7 +2,6 @@
 
 class Venue
 {
-    private $venue_id;
     private $title;
     private $country;
     private $city;
@@ -11,7 +10,7 @@ class Venue
     private $zip;
     private $phone;
 
-    function __construct($id = 0)
+    function __construct()
     {
         $this->title = "";
         $this->country = "United States";
@@ -41,6 +40,15 @@ class Venue
     public function set_country($country)
     {
         $this->country = $country;
+    }
+
+    public function get_address()
+    {
+        return $this->address;
+    }
+    public function set_address($address)
+    {
+        $this->address = $address;
     }
 
     public function get_city()

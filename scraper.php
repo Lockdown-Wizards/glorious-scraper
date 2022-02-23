@@ -14,8 +14,9 @@ global $wpdb;
 require_once dirname(__DIR__) . '/glorious-scraper/requests/src/Autoload.php'; // First, include the Requests Autoloader.
 WpOrg\Requests\Autoload::register(); // Next, make sure Requests can load internal classes.
 
-// Load the Event class
+// Load the Event and Venue classes
 require_once(__DIR__ . '/Event.php');
+require_once(__DIR__ . '/Venue.php');
 
 use WpOrg\Requests\Session;
 
@@ -41,8 +42,14 @@ foreach($eventLinks as $eventLink) {
     $events[] = new Event($eventLink);
 }
 
+// Create a Venue object for each link.
+$venues = [];
+foreach($eventLinks as $eventLink) {
+    $venues[] = new Venue();
+}
+
 // For every link, scrape it for relevant event info.
-foreach($events as $event) {
+foreach($events as $i => $event) {
     $event_page = $fbSession->request(MBASIC_URL . $event->get_url());
     $event_dom = new DOMDocument();
     @ $event_dom->loadHTML($event_page->body); // @ surpresses any warnings
@@ -54,7 +61,6 @@ foreach($events as $event) {
     $datetime = extract_fb_event_datetime($event_dom);
     $organization = extract_fb_event_organization($event_dom);
     $organization_url = extract_fb_event_organization_url($event_dom);
-    $venue = extract_fb_event_venue($event_dom);
 
     $event->set_title($title);
     $event->set_description($description);
@@ -68,7 +74,14 @@ foreach($events as $event) {
     $event->set_organization($organization);
     $event->set_organization_url($organization_url);
     $event->set_featured(get_option('scraper_organization_name') === $organization);
-    $event->set_venue($venue);
+
+    $location_title = extract_fb_location_title($event_dom);
+
+    $venues[$i]->set_title($location_title);
+    //$venues[$i]->set_address();
+    //$venues[$i]->set_city();
+    //$venues[$i]->set_state();
+    //$venues[$i]->set_zip();
 }
 
 foreach($events as $event) {
@@ -81,8 +94,11 @@ foreach($events as $event) {
 
 // Format the info of each event into an arguments array that's used for the set-event.php script.
 $eventsArgs = [];
-foreach($events as $event) {
-    $eventsArgs[] = $event->to_args();
+foreach($events as $i => $event) {
+    $eventsArgs[] = [
+        'event' => $event->to_args(),
+        'venue' => $venues[$i]->to_args()
+    ];
 }
 
 echo json_encode($eventsArgs);
@@ -257,17 +273,16 @@ function extract_fb_event_ticket_url($dom) {
     }
 }
 
-// Check if this event has a venue. Use https://static.xx.fbcdn.net/rsrc.php/v3/y_/r/_gA751gYiTQ.png as the location pin icon.
-function extract_fb_event_venue($dom) {
+// Given an events page, find and extract the location title for where the event is hosted.
+function extract_fb_location_title($dom) {
     $finder = new DomXPath($dom);
-    $nodes = $finder->query('//img[contains(@src, \'https://static.xx.fbcdn.net/rsrc.php/v3/y_/r/_gA751gYiTQ.png\')]');
+    $imageSrc = 'https://static.xx.fbcdn.net/rsrc.php/v3/y_/r/_gA751gYiTQ.png'; // Location pin icon
+    $nodes = $finder->query("//img[contains(@src, '$imageSrc')]");
     if ($nodes->count() > 0) {
-        // The location pin icon was found.
-        $venueElem = $nodes->item(0)->parentNode->parentNode->getElementsByTagName('dt');
-        return $venueElem->item(0)->textContent;
+        $addressElem = $nodes->item(0)->parentNode->parentNode->getElementsByTagName('dt');
+        return $addressElem->item(0)->textContent ?? "";
     }
     else {
-        // The location pin icon was not found.
         return "";
     }
 }
