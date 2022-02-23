@@ -1,8 +1,7 @@
 <?php
 /*
  * Utilizes 'the events calendar' API to create or update a venue that will appear under the events tab.
- * Specify 'id' => 0 in the args array to create a new venue.
- * Otherwise, give a specific id and this will update the already existing venue.
+ * This script will auto-detect if a venue already exists or not, so supplying an ID is not necessary (unlike set-event.php)
 */
 
 // Access the wordpress database
@@ -22,31 +21,82 @@ require_once dirname(__DIR__) . '/the-events-calendar/src/functions/advanced-fun
 
 if (isset($_POST['args'])) {
     // Documentation for all args: https://docs.theeventscalendar.com/reference/functions/tribe_create_venue/
-    $args = $_POST['args'];
-    $venueArgs = $args['venue'];
+    $args = (array) json_decode(stripslashes($_POST['args']));
 
-    //$postId = $args['ID'] || $args['id'] || $args['import_id'];
-    $postId = intval($args['id']);
+    /* 
+     * All Venue metadata tags from the postmeta table in the database:
+     * _VenueCountry
+	 * _VenueAddress
+	 * _VenueCity
+	 * _VenueStateProvince
+	 * _VenueState
+	 * _VenueProvince
+	 * _VenueZip
+	 * _VenuePhone
+	 * _VenueURL
+	 * _VenueShowMap
+	 * _VenueShowMapLink
+    */
 
-    // If the id given is 0, search the database for the most recent post, then add one to it.
-    if ($postId === 0) {
-        $sql = "SELECT ID FROM `wp_posts` ORDER BY `ID` DESC LIMIT 1;";
-	    $result = $wpdb->get_results($sql);
-        $postId = intval($result[0]->ID) + 1;
+    /*
+     * All args array values:
+     * id
+     * Venue
+     * Country
+     * City
+     * State
+     * Address
+     * Province
+     * Zip
+     * Phone
+    */ 
+
+    // Every venue needs a title. Check if we have a title for this venue.
+    if (!isset($args['Venue'])) { 
+        echo "Venue not set. Missing venue title.";
+        exit();
     }
 
-    // Since it's possible to enter in the wrong ID key in the args array, this code ensures that the ID key will be 'ID' if the post already exists or 'import_id' if the post doesn't yet exist.
-    $postIdArg = (get_post_status($postId)) ? 'ID' : 'import_id'; // https://stackoverflow.com/questions/41655064/why-wp-update-post-return-invalid-post-id
-    unset($args['id']);
-    $updatedArgs = [$postIdArg => $postId];
-    foreach ($args as $key => $arg) {
-        if ($arg !== null) {
-            $updatedArgs[$key] = $arg;
+    // Find a venue that matches the venue name from the args array.
+    $posts_table_name = $wpdb->prefix . "posts";
+    $postmeta_table_name = $wpdb->prefix . "postmeta";
+    $sql = `SELECT $posts_table_name.ID, $posts_table_name.post_title, $postmeta_table_name.meta_key, $postmeta_table_name.meta_value 
+            FROM $posts_table_name
+            INNER JOIN $postmeta_table_name ON $postmeta_table_name.post_id = $posts_table_name.ID 
+            WHERE $postmeta_table_name.meta_key LIKE '_Venue%' 
+            AND $posts_table_name.post_title = '`.$args['Venue'].`';`;
+    $results = $wpdb->get_results($sql); // Contains results for a Venue with a title that matches the one given in the args array ($args['Venue']).
+    
+    // Detect whether or not the venue found in the database matches with the one outlined in the args array.
+    $hasMatchingAddress = false;
+    $hasMatchingCity = false;
+    $hasMatchingState = false;
+    foreach ($results as $metadata) {
+        if ($metadata->meta_key === '_VenueAddress') {
+            $hasMatchingAddress = $metadata->meta_key === $args['Address'];
+        }
+        else if ($metadata->meta_key === '_VenueCity') {
+            $hasMatchingCity = $metadata->meta_key === $args['City'];
+        }
+        else if ($metadata->meta_key === '_VenueState') {
+            $hasMatchingState = $metadata->meta_key === $args['State'];
         }
     }
-    
-    // If you're not getting any results, then edit line 102 in '\the-events-calendar\src\functions\advanced-functions\event.php' to 'return $postId;' to see error messages.
-    var_dump(tribe_create_venue($updatedArgs));
+    $hasMatchingVenue = $hasMatchingAddress && $hasMatchingCity && $hasMatchingState;
+
+    // Set the post id for this venue if updating an existing venue.
+    $postId = -1;
+    if (count($results) > 0 && $hasMatchingVenue) {
+        $postId = $results[0]->ID;
+    }
+
+    // Set the event
+    if ($postId === -1) {
+        echo json_encode(tribe_create_venue($args));
+    }
+    else {
+        echo json_encode(tribe_update_venue($postId, $args));
+    }
 }
 else {
     echo 'Args not supplied to the set-venue script. Cannot add event to the database. Did you forget to add [\'args\' => $args] as your post request body?';

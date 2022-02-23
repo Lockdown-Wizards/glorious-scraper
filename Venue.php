@@ -11,11 +11,10 @@ class Venue
     private $zip;
     private $phone;
 
-    function __construct($url)
+    function __construct($id = 0)
     {
-        $this->venue_id = 0;
         $this->title = "";
-        $this->country = "";
+        $this->country = "United States";
         $this->city = "";
         $this->state = "";
         $this->title = "";
@@ -25,15 +24,6 @@ class Venue
     }
 
     // All getters and setters
-
-    public function get_venue_id()
-    {
-        return $this->venue_id;
-    }
-    public function set_venue_id($venue_id)
-    {
-        $this->venue_id = $venue_id;
-    }
 
     public function get_title()
     {
@@ -101,15 +91,14 @@ class Venue
     public function to_args()
     {
         return [
-            'id' => $this->venue_id,
-            'title' => $this->title,
-            'country' => $this->country,
-            'city' => $this->city,
-            'state' => $this->state,
-            'address' => $this->title,
-            'province' => $this->province,
-            'zip' => $this->zip,
-            'phone' => $this->phone,
+            'Venue' => $this->title,
+            'Country' => $this->country,
+            'City' => $this->city,
+            'State' => $this->state,
+            'Address' => $this->title,
+            'Province' => $this->province,
+            'Zip' => $this->zip,
+            'Phone' => $this->phone,
         ];
     }
 }
