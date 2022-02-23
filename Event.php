@@ -19,7 +19,6 @@ class Event
     private $organization;
     private $featured;
     private $category;
-    private $venue;
 
     function __construct($url)
     {
@@ -202,15 +201,6 @@ class Event
         $this->category = $category;
     }
 
-    public function get_venue()
-    {
-        return $this->venue;
-    }
-    public function set_venue($venue)
-    {
-        $this->venue = $venue;
-    }
-
     private function get_meridian($time_str)
     {
         return str_contains($time_str, "PM") ? "PM" : "AM";
@@ -273,7 +263,6 @@ class Event
             'FeaturedImage' => $this->image,
             'Organizer' => $this->organization,
             'post_category' => $this->category,
-            //'Venue' => $this->venue,
             'comment_status' => 'open',
         ];
     }

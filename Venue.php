@@ -13,11 +13,6 @@ class Venue
 
     function __construct($url)
     {
-        if (str_contains($url, '/venue/')) {
-            $this->venue_id = explode('/venue/', $url)[1];
-        } else {
-            $this->venue_id = 0;
-        }
         $this->venue_id = 0;
         $this->title = "";
         $this->country = "";
