@@ -7,10 +7,6 @@
 // Access the wordpress database
 require_once($_SERVER['DOCUMENT_ROOT'] . '/wordpress/wp-load.php');
 
-// Load in the Requests library: https://github.com/WordPress/Requests
-require_once dirname(__DIR__) . '/glorious-scraper/requests/src/Autoload.php'; // First, include the Requests Autoloader.
-WpOrg\Requests\Autoload::register(); // Next, make sure Requests can load internal classes.
-
 // Load the events calendar event creation API
 require_once dirname(__DIR__) . '/the-events-calendar/src/functions/php-min-version.php'; // Load the required php min version functions.
 require_once dirname(__DIR__) . '/the-events-calendar/vendor/autoload.php'; // Load the Composer autoload file.
@@ -90,13 +86,12 @@ if (isset($_POST['args'])) {
         $postId = $results[0]->ID;
     }
 
-    // Set the event
+    // Set the venue
     if ($postId === -1) {
         echo json_encode(tribe_create_venue($args));
     }
     else {
-        tribe_update_venue($postId, $args);
-        echo json_encode(false);
+        echo json_encode(tribe_update_venue($postId, $args));
     }
 }
 else {

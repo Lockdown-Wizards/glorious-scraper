@@ -34,11 +34,9 @@ window.addEventListener("DOMContentLoaded", () => {
                         venueFormData.append("args", JSON.stringify(args.venue));
                         postForm("../wp-content/plugins/glorious-scraper/set-venue.php", venueFormData).then(
                             (venueCreationId) => {
-                                if (venueCreationId) {
-                                    writeToConsole(
-                                        `(${args.venue.City}, ${args.venue.State}) New venue '${args.venue.Venue}' created with venue id: ${venueCreationId}\n`
-                                    );
-                                }
+                                writeToConsole(
+                                    `(${args.venue.City}, ${args.venue.State}) Venue '${args.venue.Venue}' set with venue id: ${venueCreationId}\n`
+                                );
 
                                 // This is supposed to set the venue of the event, but doesn't work right now.
                                 args.event.Venue = JSON.stringify(args.venue);
@@ -51,6 +49,17 @@ window.addEventListener("DOMContentLoaded", () => {
                                         writeToConsole(
                                             `(${args.event.Organizer}) Draft set for '${args.event.post_title}' with event id: ${eventCreationId}\n`
                                         );
+
+                                        // Link the event to the venue
+                                        let linkVenueToEventFormData = new FormData();
+                                        linkVenueToEventFormData.append("venueId", JSON.stringify(venueCreationId));
+                                        linkVenueToEventFormData.append("eventId", JSON.stringify(eventCreationId));
+                                        postForm(
+                                            "../wp-content/plugins/glorious-scraper/pair-venue-to-event.php",
+                                            linkVenueToEventFormData
+                                        ).then((metadataId) => {
+                                            console.log("metadata id: ", metadataId);
+                                        });
                                     })
                                     .finally(() => {
                                         completed++;
