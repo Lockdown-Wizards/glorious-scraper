@@ -250,6 +250,7 @@ class Event
             'id' => $this->event_id,
             'post_title' => $this->title,
             'EventURL' => $facebook_base_url . $this->url,
+            'Location' => $this->location,
             'post_content' => $this->formatted_description(),
             'post_type' => 'tribe_events',
             'EventStartDate' => $this->start_date,

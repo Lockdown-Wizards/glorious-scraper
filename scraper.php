@@ -75,20 +75,22 @@ foreach($events as $i => $event) {
     $event->set_organization_url($organization_url);
     $event->set_featured(get_option('scraper_organization_name') === $organization);
 
-    $location_title = extract_fb_location_title($event_dom);
-    $street = $city = $state = $zip = "";
-    if (!location_is_online($location)) {
-        $street = street_from_location($location);
-        $city = city_from_location($location);
-        $state = state_from_location($location);
-        $zip = zip_from_location($location);
-    }
+    if ($location !== "") {
+        $location_title = extract_fb_location_title($event_dom);
+        $street = $city = $state = $zip = "";
+        if (!location_is_online($location)) {
+            $street = street_from_location($location);
+            $city = city_from_location($location);
+            $state = state_from_location($location);
+            $zip = zip_from_location($location);
+        }
 
-    $venues[$i]->set_title($location_title);
-    $venues[$i]->set_address($street);
-    $venues[$i]->set_city($city);
-    $venues[$i]->set_state($state);
-    $venues[$i]->set_zip($zip);
+        $venues[$i]->set_title($location_title);
+        $venues[$i]->set_address($street);
+        $venues[$i]->set_city($city);
+        $venues[$i]->set_state($state);
+        $venues[$i]->set_zip($zip);
+    }
 }
 
 foreach($events as $event) {

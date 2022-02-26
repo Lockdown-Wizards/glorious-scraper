@@ -26,51 +26,78 @@ window.addEventListener("DOMContentLoaded", () => {
                 postForm("../wp-content/plugins/glorious-scraper/scraper.php", formData).then((allArgs) => {
                     // Allows the scraper to keep track of how many events there are left.
                     totalEvents += allArgs.length;
+                    console.log(allArgs);
 
                     // For each event, set the venue and then the event in the events calendar
                     // We create the venue first so that we may add it to the event.
                     allArgs.forEach((args) => {
-                        let venueFormData = new FormData();
-                        venueFormData.append("args", JSON.stringify(args.venue));
-                        postForm("../wp-content/plugins/glorious-scraper/set-venue.php", venueFormData).then(
-                            (venueCreationId) => {
-                                writeToConsole(
-                                    `(${args.venue.City}, ${args.venue.State}) Venue '${args.venue.Venue}' set with venue id: ${venueCreationId}\n`
-                                );
+                        if (args.event.Location === "") {
+                            // Create the event
+                            let eventFormData = new FormData();
+                            eventFormData.append("args", JSON.stringify(args.event));
+                            postForm("../wp-content/plugins/glorious-scraper/set-event.php", eventFormData)
+                                .then((eventCreationId) => {
+                                    writeToConsole(
+                                        `(${args.event.Organizer}) Draft set for '${args.event.post_title}' with event id: ${eventCreationId}\n`
+                                    );
+                                    writeToConsole(
+                                        `<span style="color: red;">(Error) Unable to set the venue for event <a href='${args.event.EventURL}'>'${args.event.post_title}'</a>. Please enter this manually.</span>\n`
+                                    );
+                                })
+                                .finally(() => {
+                                    completed++;
+                                    if (completed === totalEvents && urlIndex + 1 === gloriousData.urls.length) {
+                                        // Display to console when scraping is complete.
+                                        writeToConsole("Scraping complete.");
+                                        scraperButton.disabled = false;
+                                    }
+                                });
+                        } else {
+                            let venueFormData = new FormData();
+                            venueFormData.append("args", JSON.stringify(args.venue));
+                            postForm("../wp-content/plugins/glorious-scraper/set-venue.php", venueFormData).then(
+                                (venueCreationId) => {
+                                    writeToConsole(
+                                        `(${args.venue.City}, ${args.venue.State}) Venue '${args.venue.Venue}' set with venue id: ${venueCreationId}\n`
+                                    );
 
-                                // This is supposed to set the venue of the event, but doesn't work right now.
-                                args.event.Venue = JSON.stringify(args.venue);
+                                    // This is supposed to set the venue of the event, but doesn't work right now.
+                                    args.event.Venue = JSON.stringify(args.venue);
 
-                                // Create the event
-                                let eventFormData = new FormData();
-                                eventFormData.append("args", JSON.stringify(args.event));
-                                postForm("../wp-content/plugins/glorious-scraper/set-event.php", eventFormData)
-                                    .then((eventCreationId) => {
-                                        writeToConsole(
-                                            `(${args.event.Organizer}) Draft set for '${args.event.post_title}' with event id: ${eventCreationId}\n`
-                                        );
+                                    // Create the event
+                                    let eventFormData = new FormData();
+                                    eventFormData.append("args", JSON.stringify(args.event));
+                                    postForm("../wp-content/plugins/glorious-scraper/set-event.php", eventFormData)
+                                        .then((eventCreationId) => {
+                                            writeToConsole(
+                                                `(${args.event.Organizer}) Draft set for '${args.event.post_title}' with event id: ${eventCreationId}\n`
+                                            );
 
-                                        // Link the event to the venue
-                                        let linkVenueToEventFormData = new FormData();
-                                        linkVenueToEventFormData.append("venueId", JSON.stringify(venueCreationId));
-                                        linkVenueToEventFormData.append("eventId", JSON.stringify(eventCreationId));
-                                        postForm(
-                                            "../wp-content/plugins/glorious-scraper/pair-venue-to-event.php",
-                                            linkVenueToEventFormData
-                                        ).then((metadataId) => {
-                                            console.log("metadata id: ", metadataId);
+                                            // Link the event to the venue
+                                            let linkVenueToEventFormData = new FormData();
+                                            linkVenueToEventFormData.append("venueId", JSON.stringify(venueCreationId));
+                                            linkVenueToEventFormData.append("eventId", JSON.stringify(eventCreationId));
+                                            postForm(
+                                                "../wp-content/plugins/glorious-scraper/pair-venue-to-event.php",
+                                                linkVenueToEventFormData
+                                            ).then((metadataId) => {
+                                                console.log("metadata id: ", metadataId);
+                                            });
+                                        })
+                                        .finally(() => {
+                                            completed++;
+                                            if (
+                                                completed === totalEvents &&
+                                                urlIndex + 1 === gloriousData.urls.length
+                                            ) {
+                                                // Display to console when scraping is complete.
+                                                writeToConsole("Scraping complete.");
+                                                scraperButton.disabled = false;
+                                            }
                                         });
-                                    })
-                                    .finally(() => {
-                                        completed++;
-                                        if (completed === totalEvents && urlIndex + 1 === gloriousData.urls.length) {
-                                            // Display to console when scraping is complete.
-                                            writeToConsole("Scraping complete.");
-                                            scraperButton.disabled = false;
-                                        }
-                                    });
-                            }
-                        );
+                                }
+                            );
+                        }
                     });
                 });
             });
