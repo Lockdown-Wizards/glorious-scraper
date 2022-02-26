@@ -43,6 +43,9 @@ window.addEventListener("DOMContentLoaded", () => {
                                     writeToConsole(
                                         `<span style="color: red;">(Error) Unable to set the venue for event <a href='${args.event.EventURL}'>'${args.event.post_title}'</a>. Please enter this manually.</span>\n`
                                     );
+
+                                    // Pair categories to the event
+                                    pairCategoriesToEvent(args);
                                 })
                                 .finally(() => {
                                     completed++;
@@ -80,9 +83,10 @@ window.addEventListener("DOMContentLoaded", () => {
                                             postForm(
                                                 "../wp-content/plugins/glorious-scraper/pair-venue-to-event.php",
                                                 linkVenueToEventFormData
-                                            ).then((metadataId) => {
-                                                console.log("metadata id: ", metadataId);
-                                            });
+                                            );
+
+                                            // Pair a category to the event
+                                            pairCategoriesToEvent(args);
                                         })
                                         .finally(() => {
                                             completed++;
@@ -113,17 +117,32 @@ window.addEventListener("DOMContentLoaded", () => {
         return response.json(); // parses JSON response into native JavaScript objects
     }
 
-    async function post(url = "", data = {}) {
-        // Default options are marked with *
-        const response = await fetch(url, {
-            method: "POST", // *GET, POST, PUT, DELETE, etc.
-            headers: {
-                "Content-Type": "application/json",
-                // 'Content-Type': 'application/x-www-form-urlencoded',
-            },
-            body: JSON.stringify(data), // body data type must match "Content-Type" header
-        });
-        return response.json(); // parses JSON response into native JavaScript objects
+    // Pair an array of categories to an event
+    async function pairCategoriesToEvent(args) {
+        if (args.event.post_categories.length > 0) {
+            args.event.post_categories.forEach((category) => {
+                let categoryFormData = new FormData();
+                categoryFormData.append("category", JSON.stringify(category));
+                categoryFormData.append("eventId", JSON.stringify(args.event.id));
+                postForm("../wp-content/plugins/glorious-scraper/set-category.php", categoryFormData).then(
+                    (isCategoryLinkedToEvent) => {
+                        if (isCategoryLinkedToEvent) {
+                            writeToConsole(
+                                `(${args.event.Organizer}) Category set as '${args.event.post_category}' for event '${args.event.post_title}'.\n`
+                            );
+                        } else {
+                            writeToConsole(
+                                `<span style="color: red;">(Error) Unable to set the category '${category}' for event <a href='${args.event.EventURL}'>'${args.event.post_title}'</a>. Please enter this manually.</span>\n`
+                            );
+                        }
+                    }
+                );
+            });
+        } else {
+            writeToConsole(
+                `<span style="color: red;">(Error) Unable to set any category for event <a href='${args.event.EventURL}'>'${args.event.post_title}'</a>. Please enter this manually.</span>\n`
+            );
+        }
     }
 
     // Function which writes to the console shown on the Event Scraper admin page.

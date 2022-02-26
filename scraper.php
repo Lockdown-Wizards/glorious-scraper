@@ -98,7 +98,11 @@ foreach($events as $event) {
     $event_dom = new DOMDocument();
     @ $event_dom->loadHTML($event_page->body); // @ surpresses any warnings
 
-    $event->set_ticket_url(extract_fb_event_ticket_url($event_dom));
+    $ticket_url = extract_fb_event_ticket_url($event_dom);
+    $categories = extract_fb_event_categories($event_dom);
+
+    $event->set_ticket_url($ticket_url);
+    $event->set_categories($categories);
 }
 
 // Format the info of each event into an arguments array that's used for the set-event.php script.
@@ -327,10 +331,9 @@ function extract_fb_event_categories($dom) {
     $finder = new DomXPath($dom);
     $nodes = $finder->query('//a[contains(@href, \'/events/discovery\')]');
     $categories = [];
-    foreach ($nodes as $node) {
-        $categories[] = $node->textContent;
+    for ($i = 0, $len = $nodes->length; $i < $len; $i++) {
+        $categories[] = $nodes->item($i)->textContent;
     }
-    $categories[] = "test";
     return $categories;
 }
 ?>

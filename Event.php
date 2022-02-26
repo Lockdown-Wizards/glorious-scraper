@@ -42,7 +42,7 @@ class Event
         $this->slug = "";
         $this->organization = "";
         $this->featured = "";
-        $this->category = []; // this is really categories but I am lazy and don't want to change the name of the variable
+        $this->categories = [];
         $this->venue = "";
     }
 
@@ -192,13 +192,13 @@ class Event
         $this->featured = $featured;
     }
 
-    public function get_category()
+    public function get_categories()
     {
-        return $this->category;
+        return $this->categories;
     }
-    public function set_category($category)
+    public function set_categories($categories)
     {
-        $this->category = $category;
+        $this->categories = $categories;
     }
 
     private function get_meridian($time_str)
@@ -263,7 +263,7 @@ class Event
             'EventEndMeridian' => $this->get_meridian($this->end_time),
             'FeaturedImage' => $this->image,
             'Organizer' => $this->organization,
-            'post_category' => $this->category, // Needs to be replaced with category IDs.
+            'post_categories' => $this->categories,
             'comment_status' => 'open',
         ];
     }
