@@ -22,19 +22,49 @@ use WpOrg\Requests\Session;
 
 const MBASIC_URL = "https://mbasic.facebook.com";
 const NORMAL_URL = "https://www.facebook.com";
+const LOGIN_URL = "https://www.facebook.com/login";
 
 // Now let's make a request!
 //$request = WpOrg\Requests\Requests::get('http://httpbin.org/get', ['Accept' => 'application/json']);
+//$url = remove_domain_name_from_url($_POST['url']);
 $url = $_POST['url'];
 //$request = WpOrg\Requests\Requests::get($url, ['Accept' => 'application/json']);
 $fbSession = new Session();
-$group_page = $fbSession->request($url);
+$fbSession->headers['Accept'] = "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9";
+$fbSession->useragent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/98.0.4758.102 Safari/537.36";
+$login_page = $fbSession->get(LOGIN_URL);
+$login_dom = new DOMDocument();
+@ $login_dom->loadHTML($login_page->body);
+
+// Parse set-cookie strings from the header into a cookie jar object.
+$login_cookie_strings = extract_cookie_strings_from_raw_response($login_page);
+$cookies = [];
+foreach ($login_cookie_strings as $login_cookie) {
+    $cookies[] = parse_cookie_string($login_cookie);
+}
+$datr_cookie = "datr=mOQbYhboF4zENfQlQUlhJ6CI; Max-Age=63072000; path=/; domain=.facebook.com; secure; httponly";
+$cookies[] = parse_cookie_string($datr_cookie);
+$cookie_jar = new WpOrg\Requests\Cookie\Jar($cookies);
+
+$loginFormPostDetails = extract_fb_login_form_details($login_dom);
+$loginFormPostDetails['username'] = '---';
+$loginFormPostDetails['pass'] = '---';
+
+
+$loginUrl = $login_dom->getElementById('login_form')->getAttribute('action');
+
+$logged_in = $fbSession->post(NORMAL_URL . $loginUrl, [], $loginFormPostDetails, ['cookies' => $cookie_jar]);
+
+//$fbSession->useragent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/98.0.4758.102 Safari/537.36';
+/*$group_page = $fbSession->request(NORMAL_URL . $url);
 //$decodedBody = $page->decode_body();
 //var_dump($decodedBody);
 $dom = new DOMDocument(); // Create a new DOMDocument object which will be used for parsing through the html
-@ $dom->loadHTML($group_page->body); // @ surpresses any warnings
+@ $dom->loadHTML($group_page->body); // @ surpresses any warnings*/
 
-$eventLinks = extract_fb_event_links($dom);
+echo json_encode($logged_in);
+
+/*$eventLinks = extract_fb_event_links($dom);
 
 // Create an Event object for each link.
 $events = [];
@@ -93,7 +123,10 @@ foreach($events as $i => $event) {
     }
 }
 
+$pages = [];
+
 foreach($events as $event) {
+    $fbSession->post(LOGIN_URL, [], $credentials);
     $event_page = $fbSession->request(NORMAL_URL . $event->get_url());
     $event_dom = new DOMDocument();
     @ $event_dom->loadHTML($event_page->body); // @ surpresses any warnings
@@ -103,6 +136,8 @@ foreach($events as $event) {
 
     $event->set_ticket_url($ticket_url);
     $event->set_categories($categories);
+
+    $pages[] = $event_page;
 }
 
 // Format the info of each event into an arguments array that's used for the set-event.php script.
@@ -114,7 +149,7 @@ foreach($events as $i => $event) {
     ];
 }
 
-echo json_encode($eventsArgs);
+echo json_encode($pages);*/
 
 //$event_page = $fbSession->request($url);
 //$postId = (get_post_status(12345678)) ? 'ID' : 'import_id';
@@ -133,6 +168,87 @@ echo json_encode($eventCreationRequest->body);*/
 //echo json_encode($page);
 //echo $page->body;
 //var_dump($events);
+
+// Parses a 'Set-Cookie' string from a raw header and returns a Cookie.
+function parse_cookie_string($cookieStr) {
+    $cookie = WpOrg\Requests\Cookie::parse($cookieStr);
+    $cookie_attributes = [];
+
+    $max_age_regex = "/Max-Age=*([^;]*)/";
+    preg_match_all($max_age_regex, $cookieStr, $max_age_matches);
+    foreach ($max_age_matches[0] as $max_age_str) {
+        $max_age_value = explode("=", $max_age_str)[1];
+        $cookie_attributes['max-age'] = $max_age_value;
+    }
+
+    $path_regex = "/path=*([^;]*)/";
+    preg_match_all($path_regex, $cookieStr, $path_matches);
+    foreach ($path_matches[0] as $path_str) {
+        $path_value = explode("=", $path_str)[1];
+        $cookie_attributes['path'] = $path_value;
+    }
+
+    $domain_regex = "/domain=*([^;]*)/";
+    preg_match_all($domain_regex, $cookieStr, $domain_matches);
+    foreach ($domain_matches[0] as $domain_str) {
+        $domain_value = explode("=", $domain_str)[1];
+        $cookie_attributes['domain'] = $domain_value;
+    }
+
+    $cookie_attributes['expires'] = time() + ((int) $cookie_attributes['max-age']);
+    $cookie_attributes['secure'] = "";
+    $cookie_attributes['httponly'] = "";
+
+    $cookie->attributes = $cookie_attributes;
+    return $cookie;
+}
+
+function extract_cookie_strings_from_raw_response($response) {
+    $cookie_line_regex = "/Set-Cookie.+/mi";
+    preg_match_all($cookie_line_regex, $response->raw, $matches);
+    
+    $cookies = [];
+    foreach ($matches[0] as $match) {
+        $cookies[] = substr($match, 12, -1);
+    }
+    return $cookies;
+}
+
+// Takes a url like 'https://mbasic.facebook.com/FairfieldCARES/events/?ref=page_internal' and removes the 'https://mbasic.facebook.com' portion of the url.
+function remove_domain_name_from_url($url) {
+    $edited_url = $url;
+    if (str_contains($url, "http://")) {
+        $edited_url = substr($url, 7);
+    }
+    else if (str_contains($url, "https://")) {
+        $edited_url = substr($url, 8);
+    }
+
+    $exploded_url_by_slash = explode("/", $edited_url);
+    $edited_url = "";
+    foreach ($exploded_url_by_slash as $i => $url_part) {
+        if ($i !== 0) {
+            $edited_url .= '/' . $url_part;
+        }
+    }
+    return $edited_url;
+}
+
+function extract_fb_login_form_details($dom) {
+    $loginForm = $dom->getElementById('login_form');
+    if ($loginForm !== null) {
+        $postDetails = [];
+        foreach ($loginForm->childNodes as $formElem) {
+            if ($formElem->hasAttribute('name')) {
+                $postDetails[$formElem->getAttribute('name')] = $formElem->getAttribute('value');
+            }
+        }
+        return $postDetails;
+    }
+    else {
+        return "";
+    }
+}
 
 // Given a facebook group page, find and extract facebook event links.
 // Returns an array of links.
@@ -155,7 +271,12 @@ function extract_fb_event_links($dom) {
 // Given an events page, find and extract the event title.
 function extract_fb_event_title($dom) {
     $loginBarElem = $dom->getElementById('mobile_login_bar');
-    return explode(' is on Facebook', $loginBarElem->textContent)[0];
+    if ($loginBarElem !== null) {
+        return explode(' is on Facebook', $loginBarElem->textContent)[0];
+    }
+    else {
+        return "";
+    }
 }
 
 // Given an events page, find and extract the date & time of the event.
@@ -242,8 +363,13 @@ function extract_fb_event_organization_url($dom) {
 // Given an events page, find and extract the event description.
 function extract_fb_event_description($dom) {
     $eventTabsElem = $dom->getElementById('event_tabs');
-    $descriptionContainerElem = $eventTabsElem->childNodes->item(1)->firstChild;
-    return $descriptionContainerElem->childNodes->item(1)->textContent;
+    if ($eventTabsElem !== null) {
+        $descriptionContainerElem = $eventTabsElem->childNodes->item(1)->firstChild;
+        return $descriptionContainerElem->childNodes->item(1)->textContent;
+    }
+    else {
+        return "";
+    }
 }
 
 // Extracts the start time from a date time string obtained from the 'extract_fb_event_datetime' function.
@@ -331,8 +457,9 @@ function extract_fb_event_categories($dom) {
     $finder = new DomXPath($dom);
     $nodes = $finder->query('//a[contains(@href, \'/events/discovery\')]');
     $categories = [];
-    for ($i = 0, $len = $nodes->length; $i < $len; $i++) {
-        $categories[] = $nodes->item($i)->textContent;
+    //for ($i = 0, $len = $nodes->count(); $i < $len; $i++) {
+    foreach ($nodes as $node) {
+        $categories[] = $node->textContent;
     }
     return $categories;
 }

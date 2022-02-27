@@ -28,9 +28,11 @@ window.addEventListener("DOMContentLoaded", () => {
                     totalEvents += allArgs.length;
                     console.log(allArgs);
 
+                    writeToConsole(allArgs.body);
+
                     // For each event, set the venue and then the event in the events calendar
                     // We create the venue first so that we may add it to the event.
-                    allArgs.forEach((args) => {
+                    /*allArgs.forEach((args) => {
                         if (args.event.Location === "") {
                             // Create the event
                             let eventFormData = new FormData();
@@ -102,7 +104,7 @@ window.addEventListener("DOMContentLoaded", () => {
                                 }
                             );
                         }
-                    });
+                    });*/
                 });
             });
         });
