@@ -2,3 +2,62 @@
  * All of the CSS for your admin-specific functionality should be
  * included in this file.
  */
+
+#wrapper-event-scraper {
+    padding-right: 10px;
+}
+
+#urls-table {
+    font-family: Arial, Helvetica, sans-serif !important;
+    border-collapse: collapse !important;
+    width: 100% !important;
+}
+
+#urls-table td,
+#urls-table th {
+    border: 1px solid #ddd !important;
+    padding: 8px !important;
+}
+
+#urls-table tr:nth-child(even) {
+    background-color: #f2f2f2 !important;
+}
+
+#urls-table tr:hover {
+    background-color: #ddd !important;
+}
+
+#urls-table th {
+    padding-top: 12px !important;
+    padding-bottom: 12px !important;
+    text-align: left !important;
+    background-color: #04aa6d !important;
+    color: white !important;
+}
+
+.full-width {
+    width: 500px !important;
+}
+
+.left {
+    float: left !important;
+}
+
+#scraperConsole {
+    position: relative;
+    display: block;
+    padding: 10px;
+    border: 2px solid black;
+    height: 360px;
+    background-color: #334;
+    color: #ddc;
+    font-size: 15px;
+    font-family: Consolas, Menlo, Monaco, Lucida Console, Liberation Mono, DejaVu Sans Mono, Bitstream Vera Sans Mono,
+        Courier New, monospace, serif;
+    border-radius: 4px;
+    overflow: auto;
+}
+
+.hidden {
+    display: none;
+}

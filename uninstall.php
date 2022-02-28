@@ -35,7 +35,8 @@
  * @since 0.0.1
  */
 function plugin_name_uninstall() {
-
+	global $wpdb;
+	
 	if ( ! defined( 'WP_UNINSTALL_PLUGIN' )
 		|| empty( $_REQUEST )
 		|| ! isset( $_REQUEST['plugin'] )
@@ -55,7 +56,15 @@ function plugin_name_uninstall() {
 	 *
 	 * @see https://developer.wordpress.org/plugins/plugin-basics/uninstall-methods/#method-2-uninstall-php
 	 */
+	uninstall_table($wpdb->prefix . 'gr_events');
+	uninstall_table($wpdb->prefix . 'gr_fbgroups');
+	delete_option('scraper_organization_name');
+}
 
+function uninstall_table($table_name) {
+	global $wpdb;
+	$sql = "DROP TABLE IF EXISTS $table_name;";
+	$wpdb->query($sql);
 }
 
 plugin_name_uninstall();

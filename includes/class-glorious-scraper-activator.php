@@ -20,6 +20,11 @@
  * @subpackage Glorious_Scraper/includes
  * @author     Your Name <lockdownwizards@gmail.com>
  */
+
+// Access to the Wordpress database
+//require_once '../../../../wp-load.php';
+//global $wpdb;
+
 class Glorious_Scraper_Activator {
 
 	/**
@@ -78,7 +83,9 @@ class Glorious_Scraper_Activator {
 		 * The plugin is now safely activated.
 		 * Perform your activation actions here.
 		 */
-
+		install_fbgroups_table();
+		install_events_table();
+		install_fb_categories_in_the_events_calendar();
 	}
 
 	/**
@@ -169,3 +176,144 @@ class Glorious_Scraper_Activator {
 
 }
 
+// Creates the table in the db responsible for holding the group urls to scrape for events.
+function install_fbgroups_table() {
+	global $wpdb;
+
+	$table_name = $wpdb->prefix . 'gr_fbgroups';
+	
+	$charset_collate = $wpdb->get_charset_collate();
+
+	$sql = "CREATE TABLE $table_name (
+		id int(10) unsigned NOT NULL AUTO_INCREMENT,
+		url text NOT NULL,
+		active tinyint(1) NOT NULL,
+		PRIMARY KEY  (id)
+	  ) $charset_collate;";
+
+	require_once( ABSPATH . 'wp-admin/includes/upgrade.php' );
+	dbDelta( $sql );
+
+	/*$sql = "CREATE TABLE $table_name (
+		id mediumint(9) NOT NULL AUTO_INCREMENT,
+		time datetime DEFAULT '0000-00-00 00:00:00' NOT NULL,
+		name tinytext NOT NULL,
+		text text NOT NULL,
+		url varchar(55) DEFAULT '' NOT NULL,
+		PRIMARY KEY  (id)
+	) $charset_collate;";
+
+	require_once( ABSPATH . 'wp-admin/includes/upgrade.php' );
+	dbDelta( $sql );*/
+
+	//add_option( 'jal_db_version', $jal_db_version );
+}
+
+// Creates the table in the db responsible for holding the group urls to scrape for events.
+function install_events_table() {
+	global $wpdb;
+
+	$table_name = $wpdb->prefix . 'gr_events';
+	$group_table_name = $wpdb->prefix . 'gr_fbgroups';
+	
+	$charset_collate = $wpdb->get_charset_collate();
+
+	$sql = "CREATE TABLE $table_name (
+		`id` int(10) unsigned NOT NULL COMMENT 'facebook id',
+		`gid` int(10) unsigned NOT NULL COMMENT 'facebook group id',
+		`wpid` bigint(20) unsigned NOT NULL COMMENT 'wp post id',
+		`last_scraped` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+		PRIMARY KEY (`id`),
+		KEY `wp_gr_events_ibfk_1` (`gid`),
+		KEY `wpid` (`wpid`),
+		CONSTRAINT `wp_gr_events_ibfk_1` FOREIGN KEY (`gid`) REFERENCES $group_table_name (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+		CONSTRAINT `wp_gr_events_ibfk_2` FOREIGN KEY (`wpid`) REFERENCES `wp_posts` (`ID`) ON DELETE CASCADE ON UPDATE CASCADE
+	  ) $charset_collate;";
+
+	require_once( ABSPATH . 'wp-admin/includes/upgrade.php' );
+	dbDelta( $sql );
+}
+
+function install_fb_categories_in_the_events_calendar() {
+	global $wpdb;
+
+	$fb_categories = [
+		"Art",
+		"Causes",
+		"Comedy",
+		"Crafts",
+		"Dance",
+		"Drinks",
+		"Film",
+		"Fitness",
+		"Food",
+		"Games",
+		"Gardening",
+		"Health",
+		"Home",
+		"Literature",
+		"Music",
+		"Networking",
+		"Party",
+		"Religion",
+		"Shopping",
+		"Sports",
+		"Theater",
+		"Wellness"
+	];
+	
+	// Find a venue that matches the venue name from the args array.
+	$terms_table_name = $wpdb->prefix . "terms";
+	$term_taxonomy_table_name = $wpdb->prefix . "term_taxonomy";
+	$sql = "SELECT $terms_table_name.name 
+			FROM $term_taxonomy_table_name
+			INNER JOIN $terms_table_name
+			WHERE $term_taxonomy_table_name.taxonomy = 'tribe_events_cat' 
+			AND $terms_table_name.term_id = $term_taxonomy_table_name.term_id
+			AND $terms_table_name.name = 'Art'
+			OR $terms_table_name.name = 'Causes'
+			OR $terms_table_name.name = 'Comedy'
+			OR $terms_table_name.name = 'Crafts'
+			OR $terms_table_name.name = 'Dance'
+			OR $terms_table_name.name = 'Drinks'
+			OR $terms_table_name.name = 'Film'
+			OR $terms_table_name.name = 'Fitness'
+			OR $terms_table_name.name = 'Food'
+			OR $terms_table_name.name = 'Games'
+			OR $terms_table_name.name = 'Gardening'
+			OR $terms_table_name.name = 'Health'
+			OR $terms_table_name.name = 'Home'
+			OR $terms_table_name.name = 'Literature'
+			OR $terms_table_name.name = 'Music'
+			OR $terms_table_name.name = 'Networking'
+			OR $terms_table_name.name = 'Party'
+			OR $terms_table_name.name = 'Religion'
+			OR $terms_table_name.name = 'Shopping'
+			OR $terms_table_name.name = 'Sports'
+			OR $terms_table_name.name = 'Theater'
+			OR $terms_table_name.name = 'Wellness'
+			ORDER BY $terms_table_name.name ASC;";
+	$results = $wpdb->get_results($sql); // Contains all facebook categories which already exist in the event calendar.
+	
+	// Checks each category in the database and adds any missing categories.
+	$db_category_index = 0;
+	foreach ($fb_categories as $fb_category) {
+		if (isset($results[$db_category_index]) && $results[$db_category_index] === $fb_category) {
+			// Category already exists in the database, check the next category
+			$db_category_index++;
+		}
+		else {
+			// Add the missing category to the database
+			add_category($fb_category);
+		}
+	}
+}
+
+// Adds a category to 'the events calendar'
+// Helper function for 'install_fb_categories_in_the_events_calendar'
+function add_category($category) {
+    $args = [
+        'slug' => strtolower($category)
+    ];
+    wp_insert_term( $category, 'tribe_events_cat', $args );
+}
