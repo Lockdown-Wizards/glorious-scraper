@@ -2,26 +2,20 @@
 
 class Venue
 {
-    private $venue_id;
     private $title;
     private $country;
+    private $address;
     private $city;
     private $state;
-    private $title;
     private $province;
     private $zip;
     private $phone;
 
-    function __construct($url)
+    function __construct()
     {
-        if (str_contains($url, '/venue/')) {
-            $this->venue_id = explode('/venue/', $url)[1];
-        } else {
-            $this->venue_id = 0;
-        }
-        $this->venue_id = 0;
         $this->title = "";
-        $this->country = "";
+        $this->country = "United States";
+        $this->address = "";
         $this->city = "";
         $this->state = "";
         $this->title = "";
@@ -31,15 +25,6 @@ class Venue
     }
 
     // All getters and setters
-
-    public function get_venue_id()
-    {
-        return $this->venue_id;
-    }
-    public function set_venue_id($venue_id)
-    {
-        $this->venue_id = $venue_id;
-    }
 
     public function get_title()
     {
@@ -59,6 +44,15 @@ class Venue
         $this->country = $country;
     }
 
+    public function get_address()
+    {
+        return $this->address;
+    }
+    public function set_address($address)
+    {
+        $this->address = $address;
+    }
+
     public function get_city()
     {
         return $this->city;
@@ -75,15 +69,6 @@ class Venue
     public function set_state($state)
     {
         return $this->state = $state;
-    }
-
-    public function get_title()
-    {
-        return $this->title;
-    }
-    public function set_title($title)
-    {
-        $this->title = $title;
     }
 
     public function get_province()
@@ -116,15 +101,14 @@ class Venue
     public function to_args()
     {
         return [
-            'id' => $this->venue_id,
-            'title' => $this->title,
-            'country' => $this->country,
-            'city' => $this->city,
-            'state' => $this->state,
-            'address' => $this->title,
-            'province' => $this->province,
-            'zip' => $this->zip,
-            'phone' => $this->phone,
+            'Venue' => $this->title,
+            'Country' => $this->country,
+            'City' => $this->city,
+            'State' => $this->state,
+            'Address' => $this->address,
+            'Province' => $this->province,
+            'Zip' => $this->zip,
+            'Phone' => $this->phone,
         ];
     }
 }

@@ -21,10 +21,8 @@ Tribe__Events__Main::instance(); // Create an instance of 'the events calendar' 
 require_once dirname(__DIR__) . '/the-events-calendar/src/functions/advanced-functions/event.php'; // Load the script needed to create events.
 
 if (isset($_POST['args'])) {
-    $args = $_POST['args']; // https://docs.theeventscalendar.com/reference/functions/tribe_create_event/
-    $venueArgs = $args['venue']; // https://docs.theeventscalendar.com/reference/functions/tribe_create_venue/
-
-    //$postId = $args['ID'] || $args['id'] || $args['import_id'];
+    // Documentation for all args: https://docs.theeventscalendar.com/reference/functions/tribe_create_event/
+    $args = (array) json_decode(stripslashes($_POST['args']));
     $postId = intval($args['id']);
 
     // If the id given is 0, search the database for the most recent post, then add one to it.
@@ -34,13 +32,9 @@ if (isset($_POST['args'])) {
         $postId = intval($result[0]->ID) + 1;
     }
 
-    //var_dump($postId);
-
     // Since it's possible to enter in the wrong ID key in the args array, this code ensures that the ID key will be 'ID' if the post already exists or 'import_id' if the post doesn't yet exist.
     $postIdArg = (get_post_status($postId)) ? 'ID' : 'import_id'; // https://stackoverflow.com/questions/41655064/why-wp-update-post-return-invalid-post-id
-    //unset($args['ID']);
     unset($args['id']);
-    //unset($args['import_id']);
     $updatedArgs = [$postIdArg => $postId];
     foreach ($args as $key => $arg) {
         if ($arg !== null) {
@@ -49,7 +43,7 @@ if (isset($_POST['args'])) {
     }
     
     // If you're not getting any results, then edit line 102 in '\the-events-calendar\src\functions\advanced-functions\event.php' to 'return $postId;' to see error messages.
-    var_dump(tribe_create_event($updatedArgs));
+    echo json_encode(tribe_create_event($updatedArgs));
 }
 else {
     echo 'Args not supplied to the set-event script. Cannot add event to the database. Did you forget to add [\'args\' => $args] as your post request body?';

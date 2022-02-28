@@ -19,7 +19,6 @@ class Event
     private $organization;
     private $featured;
     private $category;
-    private $venue;
 
     function __construct($url)
     {
@@ -43,7 +42,7 @@ class Event
         $this->slug = "";
         $this->organization = "";
         $this->featured = "";
-        $this->category = []; // this is really categories but I am lazy and don't want to change the name of the variable
+        $this->category = "";
         $this->venue = "";
     }
 
@@ -202,15 +201,6 @@ class Event
         $this->category = $category;
     }
 
-    public function get_venue()
-    {
-        return $this->venue;
-    }
-    public function set_venue($venue)
-    {
-        $this->venue = $venue;
-    }
-
     private function get_meridian($time_str)
     {
         return str_contains($time_str, "PM") ? "PM" : "AM";
@@ -260,6 +250,7 @@ class Event
             'id' => $this->event_id,
             'post_title' => $this->title,
             'EventURL' => $facebook_base_url . $this->url,
+            'Location' => $this->location,
             'post_content' => $this->formatted_description(),
             'post_type' => 'tribe_events',
             'EventStartDate' => $this->start_date,
@@ -272,8 +263,7 @@ class Event
             'EventEndMeridian' => $this->get_meridian($this->end_time),
             'FeaturedImage' => $this->image,
             'Organizer' => $this->organization,
-            'post_category' => $this->category,
-            'Venue' => $this->venue,
+            'category' => $this->category,
             'comment_status' => 'open',
         ];
     }
