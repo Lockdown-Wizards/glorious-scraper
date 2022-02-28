@@ -53,7 +53,7 @@ if (count($term_ids) > 0) {
         do_action('add_term_relationship', $_POST['eventId'], $category_taxonomy_id, 'tribe_events_cat');
         echo json_encode(true);
     }*/
-    echo json_encode(is_wp_error(wp_set_object_terms($_POST['eventId'], $term_ids[0], 'tribe_events_cat')));
+    echo json_encode(!is_wp_error(wp_set_object_terms($_POST['eventId'], $term_ids[0], 'tribe_events_cat')));
 }
 else {
     // The supplied category does not exist in the database

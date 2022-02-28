@@ -42,7 +42,7 @@ class Event
         $this->slug = "";
         $this->organization = "";
         $this->featured = "";
-        $this->categories = [];
+        $this->category = "";
         $this->venue = "";
     }
 
@@ -192,13 +192,13 @@ class Event
         $this->featured = $featured;
     }
 
-    public function get_categories()
+    public function get_category()
     {
-        return $this->categories;
+        return $this->category;
     }
-    public function set_categories($categories)
+    public function set_category($category)
     {
-        $this->categories = $categories;
+        $this->category = $category;
     }
 
     private function get_meridian($time_str)
@@ -263,7 +263,7 @@ class Event
             'EventEndMeridian' => $this->get_meridian($this->end_time),
             'FeaturedImage' => $this->image,
             'Organizer' => $this->organization,
-            'post_categories' => $this->categories,
+            'category' => $this->category,
             'comment_status' => 'open',
         ];
     }

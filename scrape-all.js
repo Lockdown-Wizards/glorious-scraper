@@ -28,11 +28,11 @@ window.addEventListener("DOMContentLoaded", () => {
                     totalEvents += allArgs.length;
                     console.log(allArgs);
 
-                    writeToConsole(allArgs.body);
+                    //writeToConsole(allArgs.body);
 
                     // For each event, set the venue and then the event in the events calendar
                     // We create the venue first so that we may add it to the event.
-                    /*allArgs.forEach((args) => {
+                    allArgs.forEach((args) => {
                         if (args.event.Location === "") {
                             // Create the event
                             let eventFormData = new FormData();
@@ -88,7 +88,7 @@ window.addEventListener("DOMContentLoaded", () => {
                                             );
 
                                             // Pair a category to the event
-                                            pairCategoriesToEvent(args);
+                                            pairCategoryToEvent(args);
                                         })
                                         .finally(() => {
                                             completed++;
@@ -104,7 +104,7 @@ window.addEventListener("DOMContentLoaded", () => {
                                 }
                             );
                         }
-                    });*/
+                    });
                 });
             });
         });
@@ -119,30 +119,28 @@ window.addEventListener("DOMContentLoaded", () => {
         return response.json(); // parses JSON response into native JavaScript objects
     }
 
-    // Pair an array of categories to an event
-    async function pairCategoriesToEvent(args) {
-        if (args.event.post_categories.length > 0) {
-            args.event.post_categories.forEach((category) => {
-                let categoryFormData = new FormData();
-                categoryFormData.append("category", JSON.stringify(category));
-                categoryFormData.append("eventId", JSON.stringify(args.event.id));
-                postForm("../wp-content/plugins/glorious-scraper/set-category.php", categoryFormData).then(
-                    (isCategoryLinkedToEvent) => {
-                        if (isCategoryLinkedToEvent) {
-                            writeToConsole(
-                                `(${args.event.Organizer}) Category set as '${args.event.post_category}' for event '${args.event.post_title}'.\n`
-                            );
-                        } else {
-                            writeToConsole(
-                                `<span style="color: red;">(Error) Unable to set the category '${category}' for event <a href='${args.event.EventURL}'>'${args.event.post_title}'</a>. Please enter this manually.</span>\n`
-                            );
-                        }
+    // Pair a category to an event
+    async function pairCategoryToEvent(args) {
+        if (args.event.category !== "") {
+            let categoryFormData = new FormData();
+            categoryFormData.append("category", JSON.stringify(args.event.category));
+            categoryFormData.append("eventId", JSON.stringify(args.event.id));
+            postForm("../wp-content/plugins/glorious-scraper/set-category.php", categoryFormData).then(
+                (isCategoryLinkedToEvent) => {
+                    if (isCategoryLinkedToEvent) {
+                        writeToConsole(
+                            `(${args.event.Organizer}) Category set as '${args.event.category}' for event '${args.event.post_title}'.\n`
+                        );
+                    } else {
+                        writeToConsole(
+                            `<span style="color: red;">(Error) Unable to set the category '${args.event.category}' for event <a href='${args.event.EventURL}'>'${args.event.post_title}'</a>. Please enter this manually.</span>\n`
+                        );
                     }
-                );
-            });
+                }
+            );
         } else {
             writeToConsole(
-                `<span style="color: red;">(Error) Unable to set any category for event <a href='${args.event.EventURL}'>'${args.event.post_title}'</a>. Please enter this manually.</span>\n`
+                `<span style="color: red;">(Error) Unable to set a category for event <a href='${args.event.EventURL}'>'${args.event.post_title}'</a>. Please enter this manually.</span>\n`
             );
         }
     }
