@@ -37,8 +37,8 @@ window.addEventListener("DOMContentLoaded", () => {
                             // Create the event
                             let eventFormData = new FormData();
                             eventFormData.append("args", JSON.stringify(args.event));
-                            postForm("../wp-content/plugins/glorious-scraper/set-event.php", eventFormData)
-                                .then((eventCreationId) => {
+                            postForm("../wp-content/plugins/glorious-scraper/set-event.php", eventFormData).then(
+                                (eventCreationId) => {
                                     writeToConsole(
                                         `(${args.event.Organizer}) Draft set for '${args.event.post_title}' with event id: ${eventCreationId}\n`
                                     );
@@ -46,17 +46,17 @@ window.addEventListener("DOMContentLoaded", () => {
                                         `<span style="color: red;">(Error) Unable to set the venue for event <a href='${args.event.EventURL}'>'${args.event.post_title}'</a>. Please enter this manually.</span>\n`
                                     );
 
-                                    // Pair categories to the event
-                                    pairCategoriesToEvent(args);
-                                })
-                                .finally(() => {
-                                    completed++;
-                                    if (completed === totalEvents && urlIndex + 1 === gloriousData.urls.length) {
-                                        // Display to console when scraping is complete.
-                                        writeToConsole("Scraping complete.");
-                                        scraperButton.disabled = false;
-                                    }
-                                });
+                                    // Pair a category to the event
+                                    pairCategoryToEvent(args).then((res) => {
+                                        completed++;
+                                        if (completed === totalEvents && urlIndex + 1 === gloriousData.urls.length) {
+                                            // Display to console when scraping is complete.
+                                            writeToConsole("Scraping complete.");
+                                            scraperButton.disabled = false;
+                                        }
+                                    });
+                                }
+                            );
                         } else {
                             let venueFormData = new FormData();
                             venueFormData.append("args", JSON.stringify(args.venue));
@@ -72,35 +72,36 @@ window.addEventListener("DOMContentLoaded", () => {
                                     // Create the event
                                     let eventFormData = new FormData();
                                     eventFormData.append("args", JSON.stringify(args.event));
-                                    postForm("../wp-content/plugins/glorious-scraper/set-event.php", eventFormData)
-                                        .then((eventCreationId) => {
-                                            writeToConsole(
-                                                `(${args.event.Organizer}) Draft set for '${args.event.post_title}' with event id: ${eventCreationId}\n`
-                                            );
+                                    postForm(
+                                        "../wp-content/plugins/glorious-scraper/set-event.php",
+                                        eventFormData
+                                    ).then((eventCreationId) => {
+                                        writeToConsole(
+                                            `(${args.event.Organizer}) Draft set for '${args.event.post_title}' with event id: ${eventCreationId}\n`
+                                        );
 
-                                            // Link the event to the venue
-                                            let linkVenueToEventFormData = new FormData();
-                                            linkVenueToEventFormData.append("venueId", JSON.stringify(venueCreationId));
-                                            linkVenueToEventFormData.append("eventId", JSON.stringify(eventCreationId));
-                                            postForm(
-                                                "../wp-content/plugins/glorious-scraper/pair-venue-to-event.php",
-                                                linkVenueToEventFormData
-                                            );
-
+                                        // Link the event to the venue
+                                        let linkVenueToEventFormData = new FormData();
+                                        linkVenueToEventFormData.append("venueId", JSON.stringify(venueCreationId));
+                                        linkVenueToEventFormData.append("eventId", JSON.stringify(eventCreationId));
+                                        postForm(
+                                            "../wp-content/plugins/glorious-scraper/pair-venue-to-event.php",
+                                            linkVenueToEventFormData
+                                        ).then(() => {
                                             // Pair a category to the event
-                                            pairCategoryToEvent(args);
-                                        })
-                                        .finally(() => {
-                                            completed++;
-                                            if (
-                                                completed === totalEvents &&
-                                                urlIndex + 1 === gloriousData.urls.length
-                                            ) {
-                                                // Display to console when scraping is complete.
-                                                writeToConsole("Scraping complete.");
-                                                scraperButton.disabled = false;
-                                            }
+                                            pairCategoryToEvent(args).then((res) => {
+                                                completed++;
+                                                if (
+                                                    completed === totalEvents &&
+                                                    urlIndex + 1 === gloriousData.urls.length
+                                                ) {
+                                                    // Display to console when scraping is complete.
+                                                    writeToConsole("Scraping complete.");
+                                                    scraperButton.disabled = false;
+                                                }
+                                            });
                                         });
+                                    });
                                 }
                             );
                         }
@@ -125,23 +126,27 @@ window.addEventListener("DOMContentLoaded", () => {
             let categoryFormData = new FormData();
             categoryFormData.append("category", JSON.stringify(args.event.category));
             categoryFormData.append("eventId", JSON.stringify(args.event.id));
-            postForm("../wp-content/plugins/glorious-scraper/set-category.php", categoryFormData).then(
-                (isCategoryLinkedToEvent) => {
-                    if (isCategoryLinkedToEvent) {
-                        writeToConsole(
-                            `(${args.event.Organizer}) Category set as '${args.event.category}' for event '${args.event.post_title}'.\n`
-                        );
-                    } else {
-                        writeToConsole(
-                            `<span style="color: red;">(Error) Unable to set the category '${args.event.category}' for event <a href='${args.event.EventURL}'>'${args.event.post_title}'</a>. Please enter this manually.</span>\n`
-                        );
-                    }
-                }
+            let isCategoryLinkedToEvent = await postForm(
+                "../wp-content/plugins/glorious-scraper/set-category.php",
+                categoryFormData
             );
+            console.log(isCategoryLinkedToEvent);
+            if (isCategoryLinkedToEvent) {
+                writeToConsole(
+                    `(${args.event.Organizer}) Category set as '${args.event.category}' for event '${args.event.post_title}'.\n`
+                );
+                return true;
+            } else {
+                writeToConsole(
+                    `<span style="color: red;">(Error) Unable to set the category '${args.event.category}' for event <a href='${args.event.EventURL}'>'${args.event.post_title}'</a>. Please enter this manually.</span>\n`
+                );
+                return false;
+            }
         } else {
             writeToConsole(
                 `<span style="color: red;">(Error) Unable to set a category for event <a href='${args.event.EventURL}'>'${args.event.post_title}'</a>. Please enter this manually.</span>\n`
             );
+            return false;
         }
     }
 
