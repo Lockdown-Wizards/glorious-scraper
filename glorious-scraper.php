@@ -93,7 +93,7 @@ function plugin_name_run()
 	add_action('admin_menu', 'setup_admin_menu');
 
 	// For cron job
-	add_action( 'gloriousrecovery_cronjob_hook', 'gr_cronjob' );
+	add_action('gloriousrecovery_cronjob_hook', 'gr_cronjob');
 
 	// Grab all group URL's from database.
 	$table_name = $wpdb->prefix . "gr_fbgroups";
@@ -111,14 +111,16 @@ function setup_admin_menu()
 }
 
 // Takes the url data obtained in this file and transfers it to the frontend (scrape-all.js) in the gloriousData variable.
-function localize_urls() {
+function localize_urls()
+{
 	global $urls;
-	wp_enqueue_script('glorious_scraper', plugin_dir_url( __FILE__ ) . 'scrape-all.js');
+	wp_enqueue_script('glorious_scraper', plugin_dir_url(__FILE__) . 'scrape-all.js');
 	wp_localize_script('glorious_scraper', 'gloriousData', ['urls' => $urls]);
 }
 
 
-function gr_cronjob() {
+function gr_cronjob()
+{
 	// This should be doing the actual cronjob
 	global $urls;
 
@@ -126,26 +128,26 @@ function gr_cronjob() {
 		// loop through all the urls and make a request for each one.
 		foreach ($urls as $url) {
 			error_log(json_encode("Now scraping: " . $url->url));
-			
+
 			// testing?
 			$request = WpOrg\Requests\Requests::post(get_site_url() . "/wp-content/plugins/glorious-scraper/scraper.php", [], ['url' => $url]);
-			
+
 			// original
 			// $request = WpOrg\Requests\Requests::post(get_site_url() . "/wp-content/plugins/glorious-scraper/scraper.php", [], ['url' => $url->url]);
-			
-			
+
+
 			// If the request was successful, then echo the request's body.
 			if ($request->status_code === 200) {
 				echo $request->body;
 				// error_log(json_encode($request->body)); // Uncomment this line to see the request's body.
-	
+
 				// Add each event to 'the events calendar' plugin.
 				$eventsArgs = json_decode($request->body);
 				$actionsTaken = ""; // Shows what events have been saved as drafts in 'the events calendar' plugin.
 				foreach ($eventsArgs as $args) {
 					$postId = set_event($args);
 					$actionsTaken .= "Draft set for '" . $args->post_title . "' with event id: " . $args->id . "\n";
-					
+
 					error_log(json_encode($actionsTaken));
 					echo json_encode($actionsTaken);
 				}
@@ -164,15 +166,15 @@ function admin_menu_init()
 	<div id="wrapper-event-scraper">
 		<h1>Event Scraper</h1>
 		<section>
-			<h2>Actions</h2>
 			<div id="scraperConsole">
-				<ul id="scraperConsoleUl">
-				</ul>
+				<ul id="scraperConsoleUl"></ul>
 			</div>
 			<br>
-			<button id="scraperButton">Run Scraper</button>
+			<button id="scraperButton" class="btn btn-success">Run Scraper</button>
 			<span id="eventCalendarErrorMsg" class="hidden" style="color:red; margin-left:10px;">Unable to run the scraper. You must install <a href="https://theeventscalendar.com/">The Events Calendar</a> plugin first, then try again.</span>
 		</section>
+
+		<hr style="margin: 10px 0;">
 
 		<section>
 			<h2>Settings</h2>
@@ -184,63 +186,59 @@ function admin_menu_init()
 								$organization_opt = get_option('scraper_organization_name');
 								$organization_opt ? $organization_opt : '';
 								?>" placeholder="Organization Name" name="organization" />
-				<input type='submit' href="JavaScript:void(0);" value="Set Organization" />
+				<input type='submit' href="JavaScript:void(0);" class="btn btn-dark" value="Set Organization" />
 			</form>
 
 			<h3>Scheduled Scrape Time</h3>
 			<form method="POST" action="../wp-content/plugins/glorious-scraper/set-cronjob.php">
-				<?php  
-					// False for not scheduled, otherwise returns timestamp
-					$gr_next_cronjob = wp_next_scheduled( 'gloriousrecovery_cronjob_hook' );
-					// echo $gr_next_cronjob . " " . gettype($gr_next_cronjob) ."<br>";
-					
-					// Used for Radio button section (cronjob recurrences)
-					$gr_cronjob_current_schedule = wp_get_schedule('gloriousrecovery_cronjob_hook');	
+				<?php
+				// False for not scheduled, otherwise returns timestamp
+				$gr_next_cronjob = wp_next_scheduled('gloriousrecovery_cronjob_hook');
+				// echo $gr_next_cronjob . " " . gettype($gr_next_cronjob) ."<br>";
 
-					if($gr_next_cronjob) {
-						$gr_timezone_here = new DateTimeZone('America/New_York');
-						$gr_timezone_GMT = new DateTimeZone("Europe/London");
-						$gr_datetime_here = new DateTime("now", $gr_timezone_here);
-						$gr_datetime_GMT = new DateTime("now", $gr_timezone_GMT);
-						// echo "Now here: " . $gr_datetime_here->format('Y-m-d H:i:s') . "<br>";
-						// echo "Now GMT:  " . $gr_datetime_GMT->format('Y-m-d H:i:s') . "<br>";
+				// Used for Radio button section (cronjob recurrences)
+				$gr_cronjob_current_schedule = wp_get_schedule('gloriousrecovery_cronjob_hook');
 
-						$gr_datetime_offset = timezone_offset_get($gr_timezone_here, $gr_datetime_GMT );
-						//echo "offset:  " . $gr_datetime_offset . "<br>";
-						$gr_next_cronjob += $gr_datetime_offset;
-						
-						$gr_current_hour_24h = floor(($gr_next_cronjob % 86400)/(3600));
-						$gr_current_hour = $gr_cronjob_current_schedule == 'twicedaily' ? $gr_current_hour_24h % 12 : $gr_current_hour_24h ; // hours after midnight
-						$gr_current_minutes = floor(($gr_next_cronjob % 3600)/(60)); // minutes after the hour
+				if ($gr_next_cronjob) {
+					$gr_timezone_here = new DateTimeZone('America/New_York');
+					$gr_timezone_GMT = new DateTimeZone("Europe/London");
+					$gr_datetime_here = new DateTime("now", $gr_timezone_here);
+					$gr_datetime_GMT = new DateTime("now", $gr_timezone_GMT);
+					// echo "Now here: " . $gr_datetime_here->format('Y-m-d H:i:s') . "<br>";
+					// echo "Now GMT:  " . $gr_datetime_GMT->format('Y-m-d H:i:s') . "<br>";
 
-						// echo $gr_current_hour ."<br>";
-						// echo $gr_current_minutes ."<br>";
+					$gr_datetime_offset = timezone_offset_get($gr_timezone_here, $gr_datetime_GMT);
+					//echo "offset:  " . $gr_datetime_offset . "<br>";
+					$gr_next_cronjob += $gr_datetime_offset;
 
-					}
-					else {
-						$gr_current_hour =  0;
-						$gr_current_minutes = 0;
-					}
+					$gr_current_hour_24h = floor(($gr_next_cronjob % 86400) / (3600));
+					$gr_current_hour = $gr_cronjob_current_schedule == 'twicedaily' ? $gr_current_hour_24h % 12 : $gr_current_hour_24h; // hours after midnight
+					$gr_current_minutes = floor(($gr_next_cronjob % 3600) / (60)); // minutes after the hour
+
+					// echo $gr_current_hour ."<br>";
+					// echo $gr_current_minutes ."<br>";
+
+				} else {
+					$gr_current_hour =  0;
+					$gr_current_minutes = 0;
+				}
 				?>
 				<div>
 					<span>
 						<label for='hours'>Hour:</label>
 						<select name='hours' id='hours'>
-						<?php
+							<?php
 							for ($i = 0; $i <= 23; $i++) {
-								if($i == (int) $gr_current_hour) {
+								if ($i == (int) $gr_current_hour) {
 									if ($i < 10) {
 										echo "<option value='0$i' selected>0$i</option>";
-									}
-									else {
+									} else {
 										echo "<option value='$i' selected>$i</option>";
 									}
-								}
-								else {
+								} else {
 									if ($i < 10) {
 										echo "<option value='0$i'>0$i</option>";
-									}
-									else {
+									} else {
 										echo "<option value='$i'>$i</option>";
 									}
 								}
@@ -252,21 +250,20 @@ function admin_menu_init()
 						<label for='minutes'>Minute:</label>
 						<select name='minutes' id='minutes'>
 
-						<?php
+							<?php
 							for ($i = 0; $i <= 11; $i++) {
 								$j = $i * 5;
 
 								// Make sure it is selected
-								if($j == (int) $gr_current_minutes) {
+								if ($j == (int) $gr_current_minutes) {
 									if ($j < 10)
 										echo "<option value='0$j' selected>0$j</option>";
-									else 
+									else
 										echo "<option value='$j' selected>$j</option>";
-								}
-								else {
+								} else {
 									if ($j < 10)
 										echo "<option value='0$j'>0$j</option>";
-									else 
+									else
 										echo "<option value='$j'>$j</option>";
 								}
 							}
@@ -276,20 +273,22 @@ function admin_menu_init()
 					<!-- Need to check which is selected to begin... -->
 					<br>
 					<br>
-					<span> 
-						<input type="radio" id="cronChoice1" name="cronjobRecurrence" value="none" <?php if(!$gr_cronjob_current_schedule) echo "checked" ?>>
+					<span>
+						<input type="radio" id="cronChoice1" name="cronjobRecurrence" value="none" <?php if (!$gr_cronjob_current_schedule) echo "checked" ?>>
 						<label for="cronChoice1">None</label>
 
-						<input type="radio" id="cronChoice2" name="cronjobRecurrence" value="daily" <?php if($gr_cronjob_current_schedule == 'daily') echo "checked" ?>>
+						<input type="radio" id="cronChoice2" name="cronjobRecurrence" value="daily" <?php if ($gr_cronjob_current_schedule == 'daily') echo "checked" ?>>
 						<label for="cronChoice2">Daily</label>
 
-						<input type="radio" id="cronChoice3" name="cronjobRecurrence" value="twicedaily" <?php if($gr_cronjob_current_schedule == 'twicedaily') echo "checked" ?>>
+						<input type="radio" id="cronChoice3" name="cronjobRecurrence" value="twicedaily" <?php if ($gr_cronjob_current_schedule == 'twicedaily') echo "checked" ?>>
 						<label for="cronChoice3">Twice Daily</label>
 					</span>
 				</div>
 				<br>
-				<input type='submit' href="JavaScript:void(0);" value='Save Settings' />
+				<input type='submit' href="JavaScript:void(0);" class="btn btn-dark" value='Save Settings' />
 			</form>
+
+			<hr style="margin: 10px 0;">
 
 			<h3>Saved URLs</h3>
 			<table id="urls-table">
@@ -297,15 +296,15 @@ function admin_menu_init()
 					<th>URL</th>
 				</tr>
 				<?php
-					foreach ($urls as $url) {
-						url_table_entry($url);
-					}
+				foreach ($urls as $url) {
+					url_table_entry($url);
+				}
 				?>
 				<tr>
-					<td class="full-width">
+					<td>
 						<form method="POST" action="../wp-content/plugins/glorious-scraper/add-url.php">
 							<input class="full-width" value="" placeholder="Add new URL..." name="new" />
-							<input type='submit' href="JavaScript:void(0);" value="Add URL" />
+							<input type='submit' href="JavaScript:void(0);" value="Add URL" class="btn btn-primary btn-round-1" />
 						</form>
 					</td>
 				</tr>
@@ -323,21 +322,21 @@ function admin_menu_init()
 
 function url_table_entry($url)
 {
-?><tr>
-	<td>
-		<form method="post" action="../wp-content/plugins/glorious-scraper/save-all.php">
-			<input class="full-width table-url-value" value="<?php echo $url->url; ?>" name="url" id="url-table-<?php echo $url->id; ?>" />
-			<input style="display: none;" value="<?php echo $url->id; ?>" name="id" />
-			<input type="submit" value="Update" />
-		</form>
-		<form method="post" class="left" action="../wp-content/plugins/glorious-scraper/delete.php">
-			<input style="display: none; float: left;" class="left" value="<?php echo $url->id; ?>" name="delete" />
-			<input type="submit" value="delete" class="left" style="float: left;" id="<?php echo $url->id; ?>" class="delete-button" />
-		</form>
-	</td>
-</tr><?php
-}
+	?><tr>
+		<td style="display: flex; align-items: center;">
+			<form method="post" action="../wp-content/plugins/glorious-scraper/save-all.php">
+				<input class="full-width table-url-value" value="<?php echo $url->url; ?>" name="url" id="url-table-<?php echo $url->id; ?>" />
+				<input style="display: none;" value="<?php echo $url->id; ?>" name="id" />
+				<input type="submit" class="btn btn-primary btn-round-1" value="Update" />
+			</form>
+			<form method="post" class="left" action="../wp-content/plugins/glorious-scraper/delete.php">
+				<input style="display: none; float: left;" value="<?php echo $url->id; ?>" name="delete" />
+				<input type="submit" value="delete" class="btn btn-danger btn-round-1" style="float: left;" id="<?php echo $url->id; ?>" class="delete-button" />
+			</form>
+		</td>
+	</tr><?php
+		}
 
-plugin_name_run();
+		plugin_name_run();
 
-?>
+			?>

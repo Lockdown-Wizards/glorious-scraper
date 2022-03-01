@@ -10,7 +10,10 @@ window.addEventListener("DOMContentLoaded", () => {
     let scraperButton = document.getElementById("scraperButton");
 
     if (scraperButton !== null) {
-        scraperButton.addEventListener("click", (e) => {
+        scraperButton.addEventListener("click", () => {
+            scraperConsole.style.height = "360px";
+            scraperConsole.style.padding = "10px";
+            scraperConsole.style.border = "2px solid black";
             scraperButton.disabled = true; // Prevent the 'Run Scraper' button from getting spammed.
             writeToConsole(
                 "Now scraping for facebook events. This may take a while, so hang tight and make a cup of tea!"
