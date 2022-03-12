@@ -248,7 +248,7 @@ function admin_menu_init()
 				<input value="<?php
 								// On load, check if an organization has been entered. If so, autofill the input box.
 								$organization_opt = get_option('scraper_organization_name');
-								$organization_opt ? $organization_opt : '';
+								echo $organization_opt ? $organization_opt : '';
 								?>" placeholder="Organization Name" name="organization" />
 				<input type='submit' href="JavaScript:void(0);" class="btn btn-dark" value="Set Organization" />
 			</form>
