@@ -28,6 +28,7 @@
  */
 
 // If this file is called directly, abort.
+
 if (!defined('WPINC')) {
 	die;
 }
@@ -121,41 +122,104 @@ function localize_urls()
 
 function gr_cronjob()
 {
-	// This should be doing the actual cronjob
-	global $urls;
 
+	error_log(">>> Entering gr_cronjob()");
+	require_once($_SERVER['DOCUMENT_ROOT'] . '/wordpress/wp-load.php');				// Access Wordpress Database
+
+	// do we even need this if scraper.php requires this?
+	require_once dirname(__DIR__) . '/glorious-scraper/requests/src/Autoload.php'; 	// First, include the Requests Autoloader.
+	WpOrg\Requests\Autoload::register(); 											// Next, make sure Requests can load internal classes.
+	
+	//error_log("Site url: " . get_site_url());										// https://localhost/wordpress
+	global $urls;																	// Should hold all the urls we need to scrape
+	
+	// Make sure each URL we need is accessible.
 	if ($urls[0] !== null) {
-		// loop through all the urls and make a request for each one.
-		foreach ($urls as $url) {
-			error_log(json_encode("Now scraping: " . $url->url));
-
-			// testing?
-			$request = WpOrg\Requests\Requests::post(get_site_url() . "/wp-content/plugins/glorious-scraper/scraper.php", [], ['url' => $url]);
-
-			// original
-			// $request = WpOrg\Requests\Requests::post(get_site_url() . "/wp-content/plugins/glorious-scraper/scraper.php", [], ['url' => $url->url]);
-
-
-			// If the request was successful, then echo the request's body.
-			if ($request->status_code === 200) {
-				echo $request->body;
-				// error_log(json_encode($request->body)); // Uncomment this line to see the request's body.
-
-				// Add each event to 'the events calendar' plugin.
-				$eventsArgs = json_decode($request->body);
-				$actionsTaken = ""; // Shows what events have been saved as drafts in 'the events calendar' plugin.
-				foreach ($eventsArgs as $args) {
-					$postId = set_event($args);
-					$actionsTaken .= "Draft set for '" . $args->post_title . "' with event id: " . $args->id . "\n";
-
-					error_log(json_encode($actionsTaken));
-					echo json_encode($actionsTaken);
-				}
-				// echo json_encode($actionsTaken);
-			}
-			error_log("done");
+		foreach($urls as $url) {	
+			error_log(print_r($url->url, TRUE));
 		}
 	}
+	
+	if ($urls[0] !== null) {
+		// Looping through URLs
+		foreach ($urls as $url) {
+			error_log(json_encode("Now scraping: " . $url->url));		
+
+			try {
+				$request = WpOrg\Requests\Requests::post(get_site_url() . "/wp-content/plugins/glorious-scraper/scraper.php", [], ['url' => $url->url]);
+				error_log("Scraper POST: " . $request->status_code);
+
+				// If the request was successful, then echo the request's body.	200 => OK
+				if ($request->status_code === 200) {
+					//error_log(print_r($request->body, TRUE)); // This is an easier to read version of the next line
+					//error_log(json_encode($request->body)); // Uncomment this line to see the request's body.
+					
+					// Add each event to 'the events calendar' plugin.
+					$eventsArgs = json_decode($request->body);
+					$actionsTaken = ""; // Shows what events have been saved as drafts in 'the events calendar' plugin.
+
+					// Looping through events
+					foreach ($eventsArgs as $args) {
+						//error_log("Args: " . print_r($args, TRUE));
+
+						if ($args->event->Location == "") {
+							try {
+								$requestEventScrape = WpOrg\Requests\Requests::post(get_site_url() . "/wp-content/plugins/glorious-scraper/set-event.php", [], ['args' => json_encode($args->event)]);
+								error_log("Set-Event POST: " . $requestEventScrape->status_code);
+								$actionsTaken .= " (" . $args->event->Organizer . ") Draft set for '" . $args->event->post_title . "' with event id: " . $requestEventScrape->body . "\n";
+							} catch(Exception $e) {
+								error_log($e->getMessage());
+							}
+						} 
+						else {
+							try {
+								//error_log(print_r($args->venue, TRUE));
+								$requestVenueScrape = WpOrg\Requests\Requests::post(get_site_url() . "/wp-content/plugins/glorious-scraper/set-venue.php", [], ['args' => json_encode($args->venue)]);
+								error_log("Set-Venue POST: " . $requestVenueScrape->status_code);
+								//error_log("Venue Request Body: " . $requestVenueScrape->body);
+								$actionsTaken .= "(" . $args->venue->City . ", " . $args->venue->State . ") Venue " . $args->venue->Venue . " with venue id: " . $requestVenueScrape->body . "\n";
+								// set venue of event somehow?
+								// use pair-venue-to-event.php?
+								//error_log(print_r($args->event, TRUE));
+								$requestEventScrape = WpOrg\Requests\Requests::post(get_site_url() . "/wp-content/plugins/glorious-scraper/set-event.php", [], ['args' => json_encode($args->event)]);
+								error_log("Set-Event POST: " .$requestEventScrape->status_code);
+								//error_log("Event Request Body: " . $requestEventScrape->body);
+								$actionsTaken .= " (" . $args->event->Organizer . ") Draft set for '" . $args->event->post_title . "' with event id: " . $requestEventScrape->body . "\n";
+
+								$venueId = $requestVenueScrape->body;
+								$eventId = $requestEventScrape->body;
+								if (isset($venueId) && isset($eventId)) {
+									$linkVenueToEvent = update_metadata('post', $eventId, '_EventVenueID', $venueId);
+									error_log("Setting venue for this event: " . ($linkVenueToEvent ? "Success" : "Failure") . "\n");
+								}
+								else {
+									error_log( 'Either venueId or eventId was not supplied. ' . "venueID: " . $venueId . " and eventID: " . $eventId . "\n");
+								}
+
+							} catch(Exception $e) {
+								error_log($e->getMessage());
+							}
+						}
+						error_log(json_encode($actionsTaken));
+					}
+
+					
+				}
+
+			}
+			catch (Exception $e) {
+				error_log($e->getMessage());
+			}
+			
+			error_log(json_encode("Done scraping: " . $url->url));
+			
+		}
+		
+	}
+	// curl_close();
+	
+	error_log("<<< Leaving gr_cronjob()");
+	
 }
 
 
@@ -251,8 +315,8 @@ function admin_menu_init()
 						<select name='minutes' id='minutes'>
 
 							<?php
-							for ($i = 0; $i <= 11; $i++) {
-								$j = $i * 5;
+							for ($i = 0; $i <= 29; $i++) {
+								$j = $i * 2;
 
 								// Make sure it is selected
 								if ($j == (int) $gr_current_minutes) {
