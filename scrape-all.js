@@ -113,7 +113,7 @@ window.addEventListener("DOMContentLoaded", () => {
             // In case no events are found, this provides a way to re-enable the 'Run Scraper' button.
             window.setTimeout(() => {
                 if (completed === totalEvents) scraperButton.disabled = false;
-            }, 5000);
+            }, 5000 * gloriousData.urls.length);
         });
     }
 

@@ -81,7 +81,7 @@ foreach($events as $i => $event) {
     if ($location !== "") {
         $location_title = extract_fb_location_title($event_dom);
         $street = $city = $state = $zip = "";
-        if (!location_is_online($location)) {
+        if (!location_is_online($location) && $location !== "") {
             $street = street_from_location($location);
             $city = city_from_location($location);
             $state = state_from_location($location);
@@ -202,6 +202,10 @@ function extract_fb_event_location($dom) {
         // If the location pin icon was not found, then the event occurs online and has a url.
         $imageSrc = 'https://static.xx.fbcdn.net/rsrc.php/v3/yq/r/rgRA6qanUH1.png'; // World icon
         $nodes = $finder->query("//img[contains(@src, '$imageSrc')]");
+        if ($nodes->count() <= 0) {
+            // Neither the pin nor world icons were found.
+            return "";
+        }
     }
     $addressElem = $nodes->item(0)->parentNode->parentNode->getElementsByTagName('dd');
     return $addressElem->item(0)->textContent ?? "";
@@ -226,7 +230,8 @@ function state_from_location($location) {
 // Given a location extracted from the event page, extract the zip code.
 function zip_from_location($location) {
     $stateAndZip = trim(explode(",", $location)[2]); // State is on the left of the space, zipcode is on the right of the space.
-    return explode(" ", $stateAndZip)[1];
+    $stateAndZipExploded = explode(" ", $stateAndZip);
+    return (count($stateAndZipExploded) > 1) ? $stateAndZipExploded[1] : "";
 }
 
 function location_is_online($location) {
