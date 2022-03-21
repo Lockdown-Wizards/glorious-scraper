@@ -140,17 +140,11 @@ function remove_domain_name_from_url($url) {
 // Given a facebook group page, find and extract facebook event links.
 // Returns an array of links.
 function extract_fb_event_links($dom) {
-    // Grab all <a> tags from the group page.
-    $linkElems = $dom->getElementsByTagName("a");
+    $finder = new DomXPath($dom);
+    $nodes = $finder->query("//a[contains(text(), 'View Event Details')]");
     $hrefs = [];
-    foreach($linkElems as $link) {
-        $hasHref = $link->getAttribute("href") !== "";
-        $isEventLink = str_contains($link->getAttribute("href"), '/events/');
-        if ($hasHref && $isEventLink) {
-            // We split the string by '?' to remove the lengthy query in the original url.
-            $hrefs[] = explode("?", $link->getAttribute("href"))[0];
-            //$hrefs[] = $BASE_URL . $link->getAttribute("href");
-        }
+    foreach ($nodes as $node) {
+        $hrefs[] = explode("?", $node->attributes->getNamedItem("href")->value)[0];
     }
     return $hrefs;
 }
