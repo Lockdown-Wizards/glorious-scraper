@@ -102,10 +102,8 @@ foreach($events as $event) {
     @ $event_dom->loadHTML($event_page->body); // @ surpresses any warnings
 
     $ticket_url = extract_fb_event_ticket_url($event_dom);
-    $category = extract_fb_event_category($event_dom);
 
     $event->set_ticket_url($ticket_url);
-    $event->set_category($category);
 }
 
 // Format the info of each event into an arguments array that's used for the set-event.php script.
@@ -339,43 +337,5 @@ function extract_fb_location_title($dom) {
     else {
         return "";
     }
-}
-
-// Check if this event belongs to a facebook category. This requires the normal event page rather than the mbasic event page.
-function extract_fb_event_category($dom) {
-    $finder = new DomXPath($dom);
-    $nodes = $finder->query('//script[contains(text(), "event_categories")]');
-    if ($nodes->count() > 0) {
-        $script_text = trim($nodes->item(0)->textContent);
-        $data_text = substr($script_text, 35, -2);
-        $json = json_decode($data_text);
-        if ($json !== null) {
-            // Search the json for the event category
-            foreach ($json->require as $dataArr) {
-                if ($dataArr[0] === "ReactRenderer" 
-                    && $dataArr[1] === "constructAndRenderComponent" 
-                    && gettype($dataArr[2]) === "array" 
-                    && $dataArr[2][0] === "EventsEventDetailsCardRenderer.react"
-                    && gettype($dataArr[3]) === "array") {
-                        foreach ($dataArr[3] as $subDataArr) {
-                            if (property_exists($subDataArr, "keywords")) {
-                                return $subDataArr->keywords[0]->name;
-                            }
-                        }
-                }
-            }
-        }
-        else {
-            return "";
-        }
-    }
-    else {
-        return "";
-    }
-    //for ($i = 0, $len = $nodes->count(); $i < $len; $i++) {
-    foreach ($nodes as $node) {
-        $categories[] = $node->textContent;
-    }
-    return $categories;
 }
 ?>
