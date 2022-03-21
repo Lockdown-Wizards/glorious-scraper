@@ -34,7 +34,7 @@ window.addEventListener("DOMContentLoaded", () => {
                     // For each event, set the venue and then the event in the events calendar
                     // We create the venue first so that we may add it to the event.
                     allArgs.forEach((args) => {
-                        if (args.event.Location === "") {
+                        if (args.event.Location === "" || args.event.Location.includes("http")) {
                             // Create the event
                             let eventFormData = new FormData();
                             eventFormData.append("args", JSON.stringify(args.event));
@@ -113,7 +113,7 @@ window.addEventListener("DOMContentLoaded", () => {
             // In case no events are found, this provides a way to re-enable the 'Run Scraper' button.
             window.setTimeout(() => {
                 if (completed === totalEvents) scraperButton.disabled = false;
-            }, 5000);
+            }, 10000 * gloriousData.urls.length);
         });
     }
 
