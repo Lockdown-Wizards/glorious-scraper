@@ -101,6 +101,12 @@ window.addEventListener("DOMContentLoaded", () => {
                             );
                         }
                     });
+
+                    if (allArgs.length <= 0) {
+                        writeToConsole(
+                            `No upcoming events for <a href="${urlData.url}">${urlData.url}</a>. Skipping this url.`
+                        );
+                    }
                 });
             });
         });
