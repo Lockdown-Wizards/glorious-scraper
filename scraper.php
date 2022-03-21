@@ -81,7 +81,7 @@ foreach($events as $i => $event) {
     if ($location !== "") {
         $location_title = extract_fb_location_title($event_dom);
         $street = $city = $state = $zip = "";
-        if (!location_is_online($location) && $location !== "") {
+        if (!location_is_online($location)) {
             $street = street_from_location($location);
             $city = city_from_location($location);
             $state = state_from_location($location);
@@ -212,20 +212,33 @@ function street_from_location($location) {
 
 // Given a location extracted from the event page, extract the city name.
 function city_from_location($location) {
-    return trim(explode(",", $location)[1]);
+    $locationExploded = explode(",", $location);
+    return (count($locationExploded) > 1) ? trim($locationExploded[1]) : "";
 }
 
 // Given a location extracted from the event page, extract the state name.
 function state_from_location($location) {
-    $stateAndZip = trim(explode(",", $location)[2]); // State is on the left of the space, zipcode is on the right of the space.
-    return explode(" ", $stateAndZip)[0];
+    $locationExploded = explode(",", $location);
+    if (count($locationExploded) > 2) {
+        $stateAndZip = trim($locationExploded[2]); // State is on the left of the space, zipcode is on the right of the space.
+        return explode(" ", $stateAndZip)[0];
+    }
+    else {
+        return "";
+    }
 }
 
 // Given a location extracted from the event page, extract the zip code.
 function zip_from_location($location) {
-    $stateAndZip = trim(explode(",", $location)[2]); // State is on the left of the space, zipcode is on the right of the space.
-    $stateAndZipExploded = explode(" ", $stateAndZip);
-    return (count($stateAndZipExploded) > 1) ? $stateAndZipExploded[1] : "";
+    $locationExploded = explode(",", $location);
+    if (count($locationExploded) > 2) {
+        $stateAndZip = trim($locationExploded[2]); // State is on the left of the space, zipcode is on the right of the space.
+        $stateAndZipExploded = explode(" ", $stateAndZip);
+        return (count($stateAndZipExploded) > 1) ? $stateAndZipExploded[1] : "";
+    }
+    else {
+        return "";
+    }
 }
 
 function location_is_online($location) {
@@ -283,24 +296,72 @@ function start_time_from_datetime($datetime) {
 
 // Extracts the end time from a date time string obtained from the 'extract_fb_event_datetime' function.
 function end_date_from_datetime($datetime) {
-    return explode(" at ", $datetime)[0];
+    $spansMultipleDays = substr_count($datetime, " at ") > 1;
+    if ($spansMultipleDays) {
+        // Assumed format: May 11 at 8:00 AM – May 13 at 3:00 PM MDT
+        $endDatetime = null;
+        // Different dashes are used on different pages. This if statement guarantees we detect the dash in the string if it exists.
+        if (str_contains($datetime, " – ")) {
+            // First dash type has been detected
+            $endDatetime = explode(" – ", $datetime)[1];
+        }
+        else if (str_contains($valueBetweenAtStr, " - ")) {
+            // Second dash type has been detected
+            $endDatetime = explode(" - ", $datetime)[1];
+        }
+        else {
+            // The string does not follow the expected format.
+            return "";
+        }
+
+        return explode(" at ", $endDatetime)[0];
+    }
+    else {
+        return explode(" at ", $datetime)[0];
+    }
 }
 
 // Extracts the end time from a date time string obtained from the 'extract_fb_event_datetime' function.
 function end_time_from_datetime($datetime) {
-    $timeStr = explode(" at ", $datetime)[1];
-    // Different dashes are used on different pages. This if statement guarantees we detect the dash in the string if it exists.
-    if (str_contains($timeStr, " – ")) {
-        // First dash type has been detected
-        return explode(" – ", $timeStr)[1];
-    }
-    else if (str_contains($timeStr, " - ")) {
-        // Second dash type has been detected
-        return explode(" - ", $timeStr)[1];
+    $spansMultipleDays = substr_count($datetime, " at ") > 1;
+    if ($spansMultipleDays) {
+        // Assumed format: May 11 at 8:00 AM – May 13 at 3:00 PM MDT
+        $endDatetime = null;
+        // Different dashes are used on different pages. This if statement guarantees we detect the dash in the string if it exists.
+        if (str_contains($datetime, " – ")) {
+            // First dash type has been detected
+            $endDatetime = explode(" – ", $datetime)[1];
+        }
+        else if (str_contains($valueBetweenAtStr, " - ")) {
+            // Second dash type has been detected
+            $endDatetime = explode(" - ", $datetime)[1];
+        }
+        else {
+            // The string does not follow the expected format.
+            return "";
+        }
+        
+        // Grab the time while excluding the time zone.
+        $time = explode(" at ", $endDatetime)[1];
+        $timeParts = explode(" ", $time);
+        return $timeParts[0] . " " . $timeParts[1];
     }
     else {
-        // No ending time specified.
-        return $timeStr;
+        $timeStr = explode(" at ", $datetime)[1];
+
+        // Different dashes are used on different pages. This if statement guarantees we detect the dash in the string if it exists.
+        if (str_contains($timeStr, " – ")) {
+            // First dash type has been detected
+            return explode(" – ", $timeStr)[1];
+        }
+        else if (str_contains($timeStr, " - ")) {
+            // Second dash type has been detected
+            return explode(" - ", $timeStr)[1];
+        }
+        else {
+            // No ending time specified.
+            return $timeStr;
+        }
     }
 }
 
