@@ -82,7 +82,8 @@
     transition: background-color 100ms linear;
 }
 
-.btn:focus, .btn.focus {
+.btn:focus,
+.btn.focus {
     outline: 0;
 }
 
@@ -128,6 +129,16 @@
 .btn-success:hover {
     background: #27ae60;
     color: #ffffff;
+}
+
+.btn-success:disabled {
+    background: #6b6b6b;
+    color: #d8d8d8;
+}
+
+.btn-success:disabled:hover {
+    background: #6b6b6b;
+    color: #d8d8d8;
 }
 
 .btn-warning {
