@@ -212,6 +212,7 @@ class Event
     }
     private function get_minutes($time_str)
     {
+        //error_log("Time string " . $time_str);
         return substr(explode(":", $time_str)[1], 0, 2);
     }
 
@@ -246,6 +247,9 @@ class Event
     public function to_args()
     {
         $facebook_base_url = 'https://www.facebook.com';
+        // Trying to look for some way to salvage multi-day event start and end times
+        error_log("Event start time: " . $this->start_time . " and start date: " . $this->start_date);
+        error_log("Event end   time: " . $this->end_time . " and end date: " . $this->end_date);
         return [
             'id' => $this->event_id,
             'post_title' => $this->title,

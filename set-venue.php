@@ -18,7 +18,7 @@ require_once dirname(__DIR__) . '/the-events-calendar/src/functions/advanced-fun
 if (isset($_POST['args'])) {
     // Documentation for all args: https://docs.theeventscalendar.com/reference/functions/tribe_create_venue/
     $args = (array) json_decode(stripslashes($_POST['args']));
-
+    //error_log("Venue args: " . print_r($args, TRUE));
     /* 
      * All Venue metadata tags from the postmeta table in the database:
      * _VenueCountry
@@ -56,25 +56,37 @@ if (isset($_POST['args'])) {
     // Find a venue that matches the venue name from the args array.
     $posts_table_name = $wpdb->prefix . "posts";
     $postmeta_table_name = $wpdb->prefix . "postmeta";
+    $post_title_with_amps = str_replace("&", "&amp;", $args['Venue']); // str_replace(search, replace, subject)
+    
     $sql = "SELECT $posts_table_name.ID, $posts_table_name.post_title, $postmeta_table_name.meta_key, $postmeta_table_name.meta_value
             FROM $posts_table_name
             INNER JOIN $postmeta_table_name ON $postmeta_table_name.post_id = $posts_table_name.ID 
             WHERE $postmeta_table_name.meta_key LIKE '_Venue%' 
-            AND $posts_table_name.post_title = '".$args['Venue']."';";
+            AND $posts_table_name.post_title = '" . $post_title_with_amps . "';";
+
+    //error_log("SQL: " . $sql);
     $results = $wpdb->get_results($sql); // Contains results for a Venue with a title that matches the one given in the args array ($args['Venue']).
-    
+    //error_log("Results in set-venue.php: " . print_r($results, TRUE));
+
     // Detect whether or not the venue found in the database matches with the one outlined in the args array.
     $hasMatchingAddress = false;
     $hasMatchingCity = false;
     $hasMatchingState = false;
     foreach ($results as $metadata) {
+        //error_log("Current metadata->metakey: " . $metadata->meta_key);
         if ($metadata->meta_key === '_VenueAddress') {
+            //error_log("Meta-value:   " . $metadata->meta_value);
+            //error_log("Actual value: " . $args['Address']);
             $hasMatchingAddress = $metadata->meta_value === $args['Address'];
         }
         else if ($metadata->meta_key === '_VenueCity') {
+            //error_log("Meta-value:   " . $metadata->meta_value);
+            //error_log("Actual value: " . $args['City']);
             $hasMatchingCity = $metadata->meta_value === $args['City'];
         }
         else if ($metadata->meta_key === '_VenueState') {
+            //error_log("Meta-value:   " . $metadata->meta_value);
+            //error_log("Actual value: " . $args['State']);
             $hasMatchingState = $metadata->meta_value === $args['State'];
         }
     }
@@ -88,9 +100,11 @@ if (isset($_POST['args'])) {
 
     // Set the venue
     if ($postId === -1) {
+        error_log("Creating venue.");
         echo json_encode(tribe_create_venue($args));
     }
     else {
+        error_log("Updating venue.");
         echo json_encode(tribe_update_venue($postId, $args));
     }
 }

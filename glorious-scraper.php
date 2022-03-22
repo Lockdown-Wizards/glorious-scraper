@@ -122,29 +122,21 @@ function localize_urls()
 
 function gr_cronjob()
 {
-
 	error_log(">>> Entering gr_cronjob()");
 	require_once($_SERVER['DOCUMENT_ROOT'] . '/wordpress/wp-load.php');				// Access Wordpress Database
-
-	// do we even need this if scraper.php requires this?
 	require_once dirname(__DIR__) . '/glorious-scraper/requests/src/Autoload.php'; 	// First, include the Requests Autoloader.
 	WpOrg\Requests\Autoload::register(); 											// Next, make sure Requests can load internal classes.
-	
-	//error_log("Site url: " . get_site_url());										// https://localhost/wordpress
 	global $urls;																	// Should hold all the urls we need to scrape
-	
-	// Make sure each URL we need is accessible.
+	/*
 	if ($urls[0] !== null) {
 		foreach($urls as $url) {	
 			error_log(print_r($url->url, TRUE));
 		}
 	}
-	
+	*/	
 	if ($urls[0] !== null) {
-		// Looping through URLs
 		foreach ($urls as $url) {
 			error_log(json_encode("Now scraping: " . $url->url));		
-
 			try {
 				$request = WpOrg\Requests\Requests::post(get_site_url() . "/wp-content/plugins/glorious-scraper/scraper.php", [], ['url' => $url->url]);
 				error_log("Scraper POST: " . $request->status_code);
@@ -158,10 +150,7 @@ function gr_cronjob()
 					$eventsArgs = json_decode($request->body);
 					$actionsTaken = ""; // Shows what events have been saved as drafts in 'the events calendar' plugin.
 
-					// Looping through events
 					foreach ($eventsArgs as $args) {
-						//error_log("Args: " . print_r($args, TRUE));
-
 						if ($args->event->Location == "") {
 							try {
 								$requestEventScrape = WpOrg\Requests\Requests::post(get_site_url() . "/wp-content/plugins/glorious-scraper/set-event.php", [], ['args' => json_encode($args->event)]);
@@ -178,8 +167,7 @@ function gr_cronjob()
 								error_log("Set-Venue POST: " . $requestVenueScrape->status_code);
 								//error_log("Venue Request Body: " . $requestVenueScrape->body);
 								$actionsTaken .= "(" . $args->venue->City . ", " . $args->venue->State . ") Venue " . $args->venue->Venue . " with venue id: " . $requestVenueScrape->body . "\n";
-								// set venue of event somehow?
-								// use pair-venue-to-event.php?
+								
 								//error_log(print_r($args->event, TRUE));
 								$requestEventScrape = WpOrg\Requests\Requests::post(get_site_url() . "/wp-content/plugins/glorious-scraper/set-event.php", [], ['args' => json_encode($args->event)]);
 								error_log("Set-Event POST: " .$requestEventScrape->status_code);
@@ -202,24 +190,16 @@ function gr_cronjob()
 						}
 						error_log(json_encode($actionsTaken));
 					}
-
-					
 				}
 
 			}
 			catch (Exception $e) {
 				error_log($e->getMessage());
 			}
-			
 			error_log(json_encode("Done scraping: " . $url->url));
-			
 		}
-		
 	}
-	// curl_close();
-	
 	error_log("<<< Leaving gr_cronjob()");
-	
 }
 
 
