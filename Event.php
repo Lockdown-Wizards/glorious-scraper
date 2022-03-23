@@ -18,7 +18,6 @@ class Event
     private $slug;
     private $organization;
     private $featured;
-    private $category;
 
     function __construct($url)
     {
@@ -42,7 +41,6 @@ class Event
         $this->slug = "";
         $this->organization = "";
         $this->featured = "";
-        $this->category = "";
         $this->venue = "";
     }
 
@@ -192,15 +190,6 @@ class Event
         $this->featured = $featured;
     }
 
-    public function get_category()
-    {
-        return $this->category;
-    }
-    public function set_category($category)
-    {
-        $this->category = $category;
-    }
-
     private function get_meridian($time_str)
     {
         return str_contains($time_str, "PM") ? "PM" : "AM";
@@ -212,7 +201,6 @@ class Event
     }
     private function get_minutes($time_str)
     {
-        //error_log("Time string " . $time_str);
         return substr(explode(":", $time_str)[1], 0, 2);
     }
 
@@ -247,9 +235,6 @@ class Event
     public function to_args()
     {
         $facebook_base_url = 'https://www.facebook.com';
-        // Trying to look for some way to salvage multi-day event start and end times
-        error_log("Event start time: " . $this->start_time . " and start date: " . $this->start_date);
-        error_log("Event end   time: " . $this->end_time . " and end date: " . $this->end_date);
         return [
             'id' => $this->event_id,
             'post_title' => $this->title,
@@ -267,7 +252,6 @@ class Event
             'EventEndMeridian' => $this->get_meridian($this->end_time),
             'FeaturedImage' => $this->image,
             'Organizer' => $this->organization,
-            'category' => $this->category,
             'comment_status' => 'open',
         ];
     }
