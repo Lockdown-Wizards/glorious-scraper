@@ -123,7 +123,8 @@ function localize_urls()
 function gr_cronjob()
 {
 	error_log(">>> Entering gr_cronjob()");
-	require_once($_SERVER['DOCUMENT_ROOT'] . '/wordpress/wp-load.php');				// Access Wordpress Database
+	require_once($_SERVER['DOCUMENT_ROOT'] . '/wordpress/wp-load.php');				// Access Wordpress Database (Development)
+	//require_once($_SERVER['DOCUMENT_ROOT'] . '/wp-load.php');						// Access Wordpress Database (Production)
 	require_once dirname(__DIR__) . '/glorious-scraper/requests/src/Autoload.php'; 	// First, include the Requests Autoloader.
 	WpOrg\Requests\Autoload::register(); 											// Next, make sure Requests can load internal classes.
 	global $urls;																	// Should hold all the urls we need to scrape

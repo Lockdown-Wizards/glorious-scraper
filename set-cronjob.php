@@ -1,6 +1,7 @@
 <?php
 // Access the wordpress database
-require_once($_SERVER['DOCUMENT_ROOT'] . '/wordpress/wp-load.php');
+require_once($_SERVER['DOCUMENT_ROOT'] . '/wordpress/wp-load.php'); // Development
+//require_once($_SERVER['DOCUMENT_ROOT'] . '/wp-load.php'); // Production
 date_default_timezone_set('America/New_York');
 
 $gr_cron_hours = $_POST['hours'];
@@ -20,5 +21,6 @@ if ($gr_cron_recurrence == 'daily' || 'twicedaily'){
     wp_schedule_event( $gr_next_time, $gr_cron_recurrence, 'gloriousrecovery_cronjob_hook' );
 }
 
-header('Location: http://localhost/wordpress/wp-admin/admin.php?page=event-scraper');
+header('Location: http://localhost/wordpress/wp-admin/admin.php?page=event-scraper'); // Development
+//header('Location: /wp-admin/admin.php?page=event-scraper'); // Production
 ?>

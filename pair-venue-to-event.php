@@ -7,7 +7,8 @@
 */
 
 // Access the wordpress database
-require_once($_SERVER['DOCUMENT_ROOT'] . '/wordpress/wp-load.php');
+require_once($_SERVER['DOCUMENT_ROOT'] . '/wordpress/wp-load.php'); // Development
+//require_once($_SERVER['DOCUMENT_ROOT'] . '/wp-load.php'); // Production
 
 if (isset($_POST['venueId']) && isset($_POST['eventId'])) {
     echo json_encode(update_metadata('post', json_decode($_POST['eventId']), '_EventVenueID', json_decode($_POST['venueId'])));
