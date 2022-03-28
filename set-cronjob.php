@@ -2,12 +2,13 @@
 // Access the wordpress database
 require_once($_SERVER['DOCUMENT_ROOT'] . '/wordpress/wp-load.php'); // Development
 //require_once($_SERVER['DOCUMENT_ROOT'] . '/wp-load.php'); // Production
-date_default_timezone_set('America/New_York');
 
 $gr_cron_hours = $_POST['hours'];
 $gr_cron_minutes = $_POST['minutes'];
 $gr_cron_recurrence = $_POST['cronjobRecurrence'];
 $gr_next_cronjob = wp_next_scheduled( 'gloriousrecovery_cronjob_hook' );
+$gr_timezone = $_POST['timezone'];
+date_default_timezone_set($gr_timezone); 
 
 // For safety, we will get rid of all current cronjobs with our hook 
 while($gr_next_cronjob) {

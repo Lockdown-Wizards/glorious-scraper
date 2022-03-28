@@ -234,6 +234,43 @@ function admin_menu_init()
 				<input type='submit' href="JavaScript:void(0);" class="btn btn-dark" value="Set Organization" />
 			</form>
 
+			<h3>Timezone</h3>
+			<p>Please select the correct timezone before setting the scheduled scrape time.</p>
+			<form method="POST" action="../wp-content/plugins/glorious-scraper/set-timezone.php">
+				<span>
+					<select name='timezone' id='timezone'>
+						<?php 
+						$gr_current_timezone = get_option('scraper_timezone');
+						error_log("Current timezone in Timezone Section:" . $gr_current_timezone );
+						if(!$gr_current_timezone) {
+							$gr_current_timezone = 'America/New_York';
+						}
+
+						// get gr_current_timezone
+						/*
+						Eastern ........... America/New_York
+						Central ........... America/Chicago
+						Mountain .......... America/Denver
+						Mountain no DST ... America/Phoenix
+						Pacific ........... America/Los_Angeles
+						Alaska ............ America/Anchorage
+						Hawaii ............ America/Adak
+						Hawaii no DST ..... Pacific/Honolulu
+						*/
+						?>
+						<option value='America/New_York' <?php echo ($gr_current_timezone == 'America/New_York' ) ? "selected" : '' ?> >Eastern</option>
+						<option value='America/Chicago' <?php echo ($gr_current_timezone == 'America/Chicago' ) ? "selected" : '' ?> >Central</option>
+						<option value='America/Denver' <?php echo ($gr_current_timezone == 'America/Denver' ) ? "selected" : '' ?> >Mountain</option>
+						<option value='America/Phoenix' <?php echo ($gr_current_timezone == 'America/Phoenix' ) ? "selected" : '' ?> >Mountain (No DST)</option>
+						<option value='America/Los_Angeles' <?php echo ($gr_current_timezone == 'America/Los_Angeles' ) ? "selected" : '' ?> >Pacific</option>
+						<option value='America/Anchorage' <?php echo ($gr_current_timezone == 'America/Anchorage' ) ? "selected" : '' ?> >Alaska</option>
+						<option value='America/Adak' <?php echo ($gr_current_timezone == 'America/Adak' ) ? "selected" : '' ?> >Hawai'i</option>
+						<option value='Pacific/Honolulu' <?php echo ($gr_current_timezone == 'Pacific/Honolulu' ) ? "selected" : '' ?> >Hawai'i (No DST)</option>
+					</select>
+				</span>
+				<input type='submit' href="JavaScript:void(0);" class="btn btn-dark" value="Set Timezone" />
+			</form>
+
 			<h3>Scheduled Scrape Time</h3>
 			<form method="POST" action="../wp-content/plugins/glorious-scraper/set-cronjob.php">
 				<?php
@@ -243,9 +280,17 @@ function admin_menu_init()
 
 				// Used for Radio button section (cronjob recurrences)
 				$gr_cronjob_current_schedule = wp_get_schedule('gloriousrecovery_cronjob_hook');
+				
+				// Get current timezone
+				$gr_current_timezone = get_option('scraper_timezone');
+				error_log("Current timezone in Cronjob (1):" . $gr_current_timezone );
+				if(!$gr_current_timezone) {
+					$gr_current_timezone = 'America/New_York';
+				}
+				error_log("Current timezone in Cronjob (2):" . $gr_current_timezone );
 
 				if ($gr_next_cronjob) {
-					$gr_timezone_here = new DateTimeZone('America/New_York');
+					$gr_timezone_here = new DateTimeZone($gr_current_timezone);
 					$gr_timezone_GMT = new DateTimeZone("Europe/London");
 					$gr_datetime_here = new DateTime("now", $gr_timezone_here);
 					$gr_datetime_GMT = new DateTime("now", $gr_timezone_GMT);
@@ -321,13 +366,15 @@ function admin_menu_init()
 					<span>
 						<input type="radio" id="cronChoice1" name="cronjobRecurrence" value="none" <?php if (!$gr_cronjob_current_schedule) echo "checked" ?>>
 						<label for="cronChoice1">None</label>
+						<br>
 
 						<input type="radio" id="cronChoice2" name="cronjobRecurrence" value="daily" <?php if ($gr_cronjob_current_schedule == 'daily') echo "checked" ?>>
 						<label for="cronChoice2">Daily</label>
-
+						<br>
 						<input type="radio" id="cronChoice3" name="cronjobRecurrence" value="twicedaily" <?php if ($gr_cronjob_current_schedule == 'twicedaily') echo "checked" ?>>
 						<label for="cronChoice3">Twice Daily</label>
 					</span>
+					
 				</div>
 				<br>
 				<input type='submit' href="JavaScript:void(0);" class="btn btn-dark" value='Save Settings' />
@@ -363,6 +410,10 @@ function admin_menu_init()
 		<script src="../wp-content/plugins/glorious-scraper/missing-events-calendar.js"></script>
 	<?php
 	}
+}
+
+function set_timezone_offset() {
+
 }
 
 function url_table_entry($url)
