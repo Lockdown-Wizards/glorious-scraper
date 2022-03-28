@@ -3,9 +3,16 @@
  * When supplied a category name and an event id, this script assigns the category to that event within 'the events calendar'.
 */
 
+// Access the plugin config
+$configs = include('config.php');
+
 // Access the wordpress database
-require_once($_SERVER['DOCUMENT_ROOT'] . '/wordpress/wp-load.php'); // Development
-//require_once($_SERVER['DOCUMENT_ROOT'] . '/wp-load.php'); // Production
+if ($configs["isDevelopment"]) {
+    require_once($_SERVER['DOCUMENT_ROOT'] . '/wordpress/wp-load.php'); // Development
+}
+else {
+    require_once($_SERVER['DOCUMENT_ROOT'] . '/wp-load.php'); // Production
+}
 
 if (!isset($_POST['category']) 
     || $_POST['category'] === ""
