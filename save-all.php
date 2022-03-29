@@ -1,6 +1,14 @@
 <?php
-require_once($_SERVER['DOCUMENT_ROOT'] . '/wordpress/wp-load.php'); // Development
-//require_once($_SERVER['DOCUMENT_ROOT'] . '/wp-load.php'); // Production
+// Access the plugin config
+$configs = include('config.php');
+
+// Access the wordpress database
+if ($configs["isDevelopment"]) {
+    require_once($_SERVER['DOCUMENT_ROOT'] . '/wordpress/wp-load.php'); // Development
+}
+else {
+    require_once($_SERVER['DOCUMENT_ROOT'] . '/wp-load.php'); // Production
+}
 
 global $wpdb;
 $id = $_POST['id'];
@@ -14,5 +22,9 @@ $wpdb->update($table_name, array('url' => $url), array('id' => $id));
 error_log($id);
 error_log($url);
 
-header('Location: http://localhost/wordpress/wp-admin/admin.php?page=event-scraper'); // Development
-//header('Location: /wp-admin/admin.php?page=event-scraper'); // Production
+if ($configs["isDevelopment"]) {
+    header('Location: http://localhost/wordpress/wp-admin/admin.php?page=event-scraper'); // Development
+}
+else {
+    header('Location: /wp-admin/admin.php?page=event-scraper'); // Production
+}

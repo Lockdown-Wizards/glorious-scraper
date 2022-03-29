@@ -6,9 +6,16 @@
  * (output) int/bool: The new meta field ID if a field with the given key didn't exist and was therefore added, true on successful update, false on failure or if the value passed to the function is the same as the one that is already in the database.
 */
 
+// Access the plugin config
+$configs = include('config.php');
+
 // Access the wordpress database
-require_once($_SERVER['DOCUMENT_ROOT'] . '/wordpress/wp-load.php'); // Development
-//require_once($_SERVER['DOCUMENT_ROOT'] . '/wp-load.php'); // Production
+if ($configs["isDevelopment"]) {
+    require_once($_SERVER['DOCUMENT_ROOT'] . '/wordpress/wp-load.php'); // Development
+}
+else {
+    require_once($_SERVER['DOCUMENT_ROOT'] . '/wp-load.php'); // Production
+}
 
 if (isset($_POST['venueId']) && isset($_POST['eventId'])) {
     echo json_encode(update_metadata('post', json_decode($_POST['eventId']), '_EventVenueID', json_decode($_POST['venueId'])));
