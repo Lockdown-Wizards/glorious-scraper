@@ -241,7 +241,7 @@ function admin_menu_init()
 					<select name='timezone' id='timezone'>
 						<?php 
 						$gr_current_timezone = get_option('scraper_timezone');
-						error_log("Current timezone in Timezone Section:" . $gr_current_timezone );
+						//error_log("Current timezone in Timezone Section:" . $gr_current_timezone );
 						if(!$gr_current_timezone) {
 							$gr_current_timezone = 'America/New_York';
 						}
@@ -276,7 +276,7 @@ function admin_menu_init()
 				<?php
 				// False for not scheduled, otherwise returns timestamp
 				$gr_next_cronjob = wp_next_scheduled('gloriousrecovery_cronjob_hook');
-				// echo $gr_next_cronjob . " " . gettype($gr_next_cronjob) ."<br>";
+				
 
 				// Used for Radio button section (cronjob recurrences)
 				$gr_cronjob_current_schedule = wp_get_schedule('gloriousrecovery_cronjob_hook');
@@ -292,21 +292,33 @@ function admin_menu_init()
 				if ($gr_next_cronjob) {
 					$gr_timezone_here = new DateTimeZone($gr_current_timezone);
 					$gr_timezone_GMT = new DateTimeZone("Europe/London");
+
+					
+					if(!$gr_next_cronjob) {
+						echo $gr_next_cronjob . " " . gettype($gr_next_cronjob) . "<br>";
+					}
+					else {
+						$gr_cronjob_datetime = new DateTime($gr_next_cronjob, $gr_timezone_GMT);
+						echo $gr_next_cronjob . " " . gettype($gr_next_cronjob) .  $gr_cronjob_datetime->format('Y-m-d H:i:s') ."<br>";
+					}
+				
 					$gr_datetime_here = new DateTime("now", $gr_timezone_here);
 					$gr_datetime_GMT = new DateTime("now", $gr_timezone_GMT);
-					// echo "Now here: " . $gr_datetime_here->format('Y-m-d H:i:s') . "<br>";
-					// echo "Now GMT:  " . $gr_datetime_GMT->format('Y-m-d H:i:s') . "<br>";
+
+					echo "Now here: " . $gr_datetime_here->format('Y-m-d H:i:s') . "<br>";
+					echo "Now GMT:  " . $gr_datetime_GMT->format('Y-m-d H:i:s') . "<br>";
 
 					$gr_datetime_offset = timezone_offset_get($gr_timezone_here, $gr_datetime_GMT);
-					//echo "offset:  " . $gr_datetime_offset . "<br>";
+
+					echo "offset:  " . $gr_datetime_offset . "<br>";
 					$gr_next_cronjob += $gr_datetime_offset;
 
 					$gr_current_hour_24h = floor(($gr_next_cronjob % 86400) / (3600));
 					$gr_current_hour = $gr_cronjob_current_schedule == 'twicedaily' ? $gr_current_hour_24h % 12 : $gr_current_hour_24h; // hours after midnight
 					$gr_current_minutes = floor(($gr_next_cronjob % 3600) / (60)); // minutes after the hour
 
-					// echo $gr_current_hour ."<br>";
-					// echo $gr_current_minutes ."<br>";
+					echo $gr_current_hour ."<br>";
+					echo $gr_current_minutes ."<br>";
 
 				} else {
 					$gr_current_hour =  0;
