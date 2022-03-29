@@ -42,10 +42,8 @@ $group_page = $fbSession->request(MBASIC_URL . $url);
 
 $dom = new DOMDocument(); // Create a new DOMDocument object which will be used for parsing through the html
 @ $dom->loadHTML($group_page->body); // @ surpresses any warnings
-echo json_encode($group_page->body);
 
-/*$eventLinks = extract_fb_event_links($dom);
-//error_log(implode(", ", $eventLinks));
+$eventLinks = extract_fb_event_links($dom);
 
 // Create an Event object for each link.
 $events = [];
@@ -123,7 +121,7 @@ foreach($events as $i => $event) {
     ];
 }
 
-echo json_encode($eventsArgs);*/
+echo json_encode($eventsArgs);
 
 // Takes a url like 'https://mbasic.facebook.com/FairfieldCARES/events/?ref=page_internal' and removes the 'https://mbasic.facebook.com' portion of the url.
 function remove_domain_name_from_url($url) {
