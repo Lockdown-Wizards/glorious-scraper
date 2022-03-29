@@ -4,9 +4,16 @@
  * This script will auto-detect if a venue already exists or not, so supplying an ID is not necessary (unlike set-event.php)
 */
 
+// Access the plugin config
+$configs = include('config.php');
+
 // Access the wordpress database
-require_once($_SERVER['DOCUMENT_ROOT'] . '/wordpress/wp-load.php'); // Development
-//require_once($_SERVER['DOCUMENT_ROOT'] . '/wp-load.php'); // Production
+if ($configs["isDevelopment"]) {
+    require_once($_SERVER['DOCUMENT_ROOT'] . '/wordpress/wp-load.php'); // Development
+}
+else {
+    require_once($_SERVER['DOCUMENT_ROOT'] . '/wp-load.php'); // Production
+}
 
 // Load the events calendar event creation API
 require_once dirname(__DIR__) . '/the-events-calendar/src/functions/php-min-version.php'; // Load the required php min version functions.

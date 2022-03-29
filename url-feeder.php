@@ -5,9 +5,16 @@
  * Finally, this script will echo info about the events it has set.
 */
 
+// Access the plugin config
+$configs = include('config.php');
+
 // Access the wordpress database
-require_once($_SERVER['DOCUMENT_ROOT'] . '/wordpress/wp-load.php'); // Development
-//require_once($_SERVER['DOCUMENT_ROOT'] . '/wp-load.php'); // Production
+if ($configs["isDevelopment"]) {
+    require_once($_SERVER['DOCUMENT_ROOT'] . '/wordpress/wp-load.php'); // Development
+}
+else {
+    require_once($_SERVER['DOCUMENT_ROOT'] . '/wp-load.php'); // Production
+}
 
 // Load in the Requests library: https://github.com/WordPress/Requests
 require_once dirname(__DIR__) . '/glorious-scraper/requests/src/Autoload.php'; // First, include the Requests Autoloader.

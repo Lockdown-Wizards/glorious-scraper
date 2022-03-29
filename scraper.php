@@ -6,9 +6,16 @@
  *
 */
 
+// Access the plugin config
+$configs = include('config.php');
+
 // Access the wordpress database
-require_once($_SERVER['DOCUMENT_ROOT'] . '/wordpress/wp-load.php'); // Development
-//require_once($_SERVER['DOCUMENT_ROOT'] . '/wp-load.php'); // Production
+if ($configs["isDevelopment"]) {
+    require_once($_SERVER['DOCUMENT_ROOT'] . '/wordpress/wp-load.php'); // Development
+}
+else {
+    require_once($_SERVER['DOCUMENT_ROOT'] . '/wp-load.php'); // Production
+}
 global $wpdb;
 
 // Load in the Requests library: https://github.com/WordPress/Requests
@@ -35,8 +42,6 @@ $group_page = $fbSession->request(MBASIC_URL . $url);
 
 $dom = new DOMDocument(); // Create a new DOMDocument object which will be used for parsing through the html
 @ $dom->loadHTML($group_page->body); // @ surpresses any warnings
-
-//echo json_encode($logged_in);
 
 $eventLinks = extract_fb_event_links($dom);
 
