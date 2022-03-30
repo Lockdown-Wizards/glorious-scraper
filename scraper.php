@@ -37,13 +37,20 @@ const NO_SCRIPT_QUERY = "_fb_noscript=1";
 $url = remove_domain_name_from_url($_POST['url']);
 //$url = $_POST['url'];
 //$request = WpOrg\Requests\Requests::get($url, ['Accept' => 'application/json']);
-$fbSession = new Session();
-$group_page = $fbSession->request(MBASIC_URL . $url);
+//$fbSession = new Session();
+//$group_page = $fbSession->request(MBASIC_URL . $url);
+$group_page = proxy_request(MBASIC_URL . $url);
 
 $dom = new DOMDocument(); // Create a new DOMDocument object which will be used for parsing through the html
-@ $dom->loadHTML($group_page->body); // @ surpresses any warnings
+@ $dom->loadHTML($group_page); // @ surpresses any warnings
 
 $eventLinks = extract_fb_event_links($dom);
+
+if (count($eventLinks) <= 0) {
+    echo json_encode(false);
+    error_log($group_page);
+    exit();
+}
 
 // Create an Event object for each link.
 $events = [];
@@ -59,9 +66,10 @@ foreach($eventLinks as $eventLink) {
 
 // For every link, scrape it for relevant event info.
 foreach($events as $i => $event) {
-    $event_page = $fbSession->request(MBASIC_URL . $event->get_url());
+    //$event_page = $fbSession->request(MBASIC_URL . $event->get_url());
+    $event_page = proxy_request(MBASIC_URL . $event->get_url());
     $event_dom = new DOMDocument();
-    @ $event_dom->loadHTML($event_page->body); // @ surpresses any warnings
+    @ $event_dom->loadHTML($event_page); // @ surpresses any warnings
 
     $title = extract_fb_event_title($event_dom);
     $description = extract_fb_event_description($event_dom);
@@ -103,9 +111,10 @@ foreach($events as $i => $event) {
 }
 
 foreach($events as $event) {
-    $event_page = $fbSession->request(NORMAL_URL . $event->get_url() . "?" . NO_SCRIPT_QUERY);
+    //$event_page = $fbSession->request(NORMAL_URL . $event->get_url() . "?" . NO_SCRIPT_QUERY);
+    $event_page = proxy_request(NORMAL_URL . $event->get_url() . "?" . NO_SCRIPT_QUERY);
     $event_dom = new DOMDocument();
-    @ $event_dom->loadHTML($event_page->body); // @ surpresses any warnings
+    @ $event_dom->loadHTML($event_page); // @ surpresses any warnings
 
     $ticket_url = extract_fb_event_ticket_url($event_dom);
 
@@ -122,6 +131,27 @@ foreach($events as $i => $event) {
 }
 
 echo json_encode($eventsArgs);
+
+function proxy_request($url) {
+    $ch = curl_init(); // get cURL resource
+    curl_setopt($ch, CURLOPT_URL, $url); // set url
+    curl_setopt($ch, CURLOPT_PROXY, "http://E6bqOoPT8vG26HmCIwhb-Q@smartproxy.proxycrawl.com:8012"); // set proxy
+    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false); // Disable SSL verification (Mandatory for HTTPS requests)
+    curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'GET'); // set method
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1); // return the transfer as a string
+    curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
+    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
+    $response = curl_exec($ch); // send the request and save response to $response
+    curl_close($ch); // close curl resource to free up system resources
+
+    if (!$response) {
+        error_log('Error: "'.curl_error($ch).'" - Code: '.curl_errno($ch));
+        return false;
+    }
+    else {
+        return $response;
+    }
+}
 
 // Takes a url like 'https://mbasic.facebook.com/FairfieldCARES/events/?ref=page_internal' and removes the 'https://mbasic.facebook.com' portion of the url.
 function remove_domain_name_from_url($url) {

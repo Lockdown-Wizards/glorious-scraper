@@ -23,6 +23,10 @@ window.addEventListener("DOMContentLoaded", () => {
             let completed = 0; // Keeps track of how many URLs have been completed.
             let totalEvents = 0; // Keeps track of how many events are being scraped.
             gloriousData.urls.forEach((urlData, urlIndex) => {
+                writeToConsole(
+                    `Attempting to scrape event data from <a href='${urlData.url}'>'${urlData.url}'</a>...</span>\n`
+                );
+
                 // Scrape all events from the url
                 let formData = new FormData();
                 formData.append("url", urlData.url);
@@ -30,6 +34,12 @@ window.addEventListener("DOMContentLoaded", () => {
                     // Allows the scraper to keep track of how many events there are left.
                     totalEvents += allArgs.length;
                     console.log(allArgs);
+                    if (!allArgs) {
+                        writeToConsole(
+                            `<span style="color: red;">(Error) Proxy service ran into an error gathering data from <a href='${urlData.url}'>'${urlData.url}'</a>. Repeat this scrape and cross your fingers.</span>\n`
+                        );
+                        return;
+                    }
 
                     // For each event, set the venue and then the event in the events calendar
                     // We create the venue first so that we may add it to the event.
@@ -113,7 +123,7 @@ window.addEventListener("DOMContentLoaded", () => {
             // In case no events are found, this provides a way to re-enable the 'Run Scraper' button.
             window.setTimeout(() => {
                 if (completed === totalEvents) scraperButton.disabled = false;
-            }, 10000 * gloriousData.urls.length);
+            }, 20000 * gloriousData.urls.length);
         });
     }
 
