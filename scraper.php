@@ -67,6 +67,9 @@ foreach($eventLinks as $eventLink) {
 // For every link, scrape it for relevant event info.
 foreach($events as $i => $event) {
     //$event_page = $fbSession->request(MBASIC_URL . $event->get_url());
+    if ($event->get_url() == "" || $event->get_url() == null) {
+        continue;
+    }
     $event_page = proxy_request(MBASIC_URL . $event->get_url());
     $event_dom = new DOMDocument();
     @ $event_dom->loadHTML($event_page); // @ surpresses any warnings
@@ -112,6 +115,9 @@ foreach($events as $i => $event) {
 
 foreach($events as $event) {
     //$event_page = $fbSession->request(NORMAL_URL . $event->get_url() . "?" . NO_SCRIPT_QUERY);
+    if ($event->get_url() == "" || $event->get_url() == null) {
+        continue;
+    }
     $event_page = proxy_request(NORMAL_URL . $event->get_url() . "?" . NO_SCRIPT_QUERY);
     $event_dom = new DOMDocument();
     @ $event_dom->loadHTML($event_page); // @ surpresses any warnings
@@ -202,6 +208,9 @@ function extract_fb_event_datetime($dom) {
     if (is_recurring_event($dom)) {
         // Extract the datetime from the 'Upcoming Events' section of the page.
         $nodes = $finder->query('//div[contains(text(), "Upcoming Dates")]');
+        if ($nodes->count() <= 0) {
+            return "";
+        }
         $firstDatetime = $nodes->item(0)->nextSibling->firstChild->firstChild->firstChild->firstChild->firstChild;
         $date = $firstDatetime->firstChild->firstChild->getAttribute("title");
         $day_and_time = $firstDatetime->childNodes->item(1)->firstChild->textContent;
@@ -212,15 +221,26 @@ function extract_fb_event_datetime($dom) {
         // Extract the datetime from the hero section underneath the event image.
         $imageSrc = 'https://static.xx.fbcdn.net/rsrc.php/v3/yL/r/HvJ9U6sdYns.png';
         $nodes = $finder->query("//img[contains(@src, '$imageSrc')]");
-        return $nodes->item(0)->parentNode->parentNode->textContent;
+        if ($nodes->count() > 0) {
+            return $nodes->item(0)->parentNode->parentNode->textContent;
+        }
+        else {
+            return "";
+        }
     }
 }
 
 // Given an events page, find and extract the event image.
 function extract_fb_event_image($dom) {
     $eventHeaderElem = $dom->getElementById('event_header');
-    $images = $eventHeaderElem->getElementsByTagName('img');
-    return $images->item(0)->getAttribute("src");
+    if ($eventHeaderElem !== null) {
+        $images = $eventHeaderElem->getElementsByTagName('img');
+        return $images->item(0)->getAttribute("src");
+    }
+    else {
+        return "";
+    }
+    
 }
 
 // Given an events page, find and extract the event address.
@@ -285,7 +305,12 @@ function location_is_online($location) {
 function extract_fb_event_organization($dom) {
     $finder = new DomXPath($dom);
     $nodes = $finder->query("//div[contains(text(), '·')]"); // The element which contains the organization name is the only one with '·' in its text.
-    return $nodes->item(0)->getElementsByTagName('a')->item(0)->textContent; // Find the <a> tag in this container, then extract its text.
+    if ($nodes->count() > 0) {
+        return $nodes->item(0)->getElementsByTagName('a')->item(0)->textContent; // Find the <a> tag in this container, then extract its text.
+    }
+    else {
+        return "";
+    }
 }
 
 // Given an events page, find and extract the url to the organization's facebook page.
@@ -314,7 +339,15 @@ function start_date_from_datetime($datetime) {
 
 // Extracts the start time from a date time string obtained from the 'extract_fb_event_datetime' function.
 function start_time_from_datetime($datetime) {
-    $times = explode(" at ", $datetime)[1];
+    $timeSplit = explode(" at ", $datetime);
+    $times = null;
+    if (count($timeSplit) > 1) {
+        $times = $timeSplit[1];
+    }
+    else {
+        return "";
+    }
+
     // Different dashes are used on different pages. This if statement guarantees we detect the dash in the string if it exists.
     if (str_contains($times, " – ")) {
         // First dash type has been detected
@@ -362,28 +395,50 @@ function end_time_from_datetime($datetime) {
     $spansMultipleDays = substr_count($datetime, " at ") > 1;
     if ($spansMultipleDays) {
         // Assumed format: May 11 at 8:00 AM – May 13 at 3:00 PM MDT
-        $endDatetime = null;
+        $splitDatetime = null;
         // Different dashes are used on different pages. This if statement guarantees we detect the dash in the string if it exists.
         if (str_contains($datetime, " – ")) {
             // First dash type has been detected
-            $endDatetime = explode(" – ", $datetime)[1];
+            $splitDatetime = explode(" – ", $datetime);
         }
         else if (str_contains($valueBetweenAtStr, " - ")) {
             // Second dash type has been detected
-            $endDatetime = explode(" - ", $datetime)[1];
+            $splitDatetime = explode(" - ", $datetime);
         }
         else {
             // The string does not follow the expected format.
             return "";
         }
+
+        $endDateTime = null;
+        if (count($splitDateTime) > 1) {
+            $endDateTime = $splitDateTime[1];
+        }
+        else {
+            return "";
+        }
         
         // Grab the time while excluding the time zone.
-        $time = explode(" at ", $endDatetime)[1];
-        $timeParts = explode(" ", $time);
-        return $timeParts[0] . " " . $timeParts[1];
+        $timeSplit = explode(" at ", $endDatetime);
+        if (count($timeSplit) > 1) {
+            $time = $timeSplit[1];
+            $timeParts = explode(" ", $time);
+            return $timeParts[0] . " " . $timeParts[1];
+        }
+        else {
+            return "";
+        }
     }
     else {
-        $timeStr = explode(" at ", $datetime)[1];
+        $timeSplit = explode(" at ", $datetime);
+
+        $timeStr = null;
+        if (count($timeSplit) > 1) {
+            $timeStr = $timeSplit[1];
+        }
+        else {
+            return "";
+        }
 
         // Different dashes are used on different pages. This if statement guarantees we detect the dash in the string if it exists.
         if (str_contains($timeStr, " – ")) {
