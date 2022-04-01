@@ -65,17 +65,21 @@ if (isset($_POST['args'])) {
     $posts_table_name = $wpdb->prefix . "posts";
     $postmeta_table_name = $wpdb->prefix . "postmeta";
     $post_title_with_amps = str_replace("&", "&amp;", $args['Venue']);
+    $post_title_with_amps_and_singlequotes = str_replace("'", "''", $post_title_with_amps); 
+    error_log("Title with amps and single quotes replace: " . $post_title_with_amps_and_singlequotes);
     $sql = "SELECT $posts_table_name.ID, $posts_table_name.post_title, $postmeta_table_name.meta_key, $postmeta_table_name.meta_value
             FROM $posts_table_name
             INNER JOIN $postmeta_table_name ON $postmeta_table_name.post_id = $posts_table_name.ID 
             WHERE $postmeta_table_name.meta_key LIKE '_Venue%' 
-            AND $posts_table_name.post_title = '" . $post_title_with_amps . "';";
+            AND $posts_table_name.post_title = '" . $post_title_with_amps_and_singlequotes . "';";
     $results = $wpdb->get_results($sql); // Contains results for a Venue with a title that matches the one given in the args array ($args['Venue']).
-    
+    error_log("Results in set-venue:" . print_r($results, TRUE));
+
     // Detect whether or not the venue found in the database matches with the one outlined in the args array.
     $hasMatchingAddress = false;
     $hasMatchingCity = false;
     $hasMatchingState = false;
+    error_log("Args address city state: " . $args['Address'] . $args['City'] . $args['State']);
     foreach ($results as $metadata) {
         if ($metadata->meta_key === '_VenueAddress') {
             $hasMatchingAddress = $metadata->meta_value === $args['Address'];

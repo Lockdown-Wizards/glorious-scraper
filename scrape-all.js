@@ -73,6 +73,7 @@ window.addEventListener("DOMContentLoaded", () => {
                                     writeToConsole(
                                         `(${args.venue.City}, ${args.venue.State}) Venue '${args.venue.Venue}' set with venue id: ${venueCreationId}\n`
                                     );
+                                    writeToConsole(args.venue);
 
                                     // This is supposed to set the venue of the event, but doesn't work right now.
                                     args.event.Venue = JSON.stringify(args.venue);
