@@ -33,6 +33,9 @@ if (!defined('WPINC')) {
 	die;
 }
 
+// Access the plugin config
+$configs = include('config.php');
+
 /**
  * Current plugin version.
  * Start at version 0.0.1 and use SemVer - https://semver.org
@@ -207,6 +210,7 @@ function gr_cronjob()
 function admin_menu_init()
 {
 	global $urls;
+	global $configs;
 ?>
 	<div id="wrapper-event-scraper">
 		<h1>Event Scraper</h1>
@@ -220,6 +224,13 @@ function admin_menu_init()
 		</section>
 
 		<hr style="margin: 10px 0;">
+
+		<?php if ($configs["enableEventsExistenceTest"]) { ?>
+			<section>
+				<button id="eventExistenceTest">Test Event Existence Endpoint</button>
+				<script class="btn" src="../wp-content/plugins/glorious-scraper/check-events-existence-test.js"></script>
+			</section>
+		<?php } ?>
 
 		<section>
 			<h2>Settings</h2>
