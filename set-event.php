@@ -24,7 +24,8 @@ require_once dirname(__DIR__) . '/the-events-calendar/src/functions/advanced-fun
 if (isset($_POST['args'])) {
     // Documentation for all args: https://docs.theeventscalendar.com/reference/functions/tribe_create_event/
     $args = (array) json_decode(stripslashes($_POST['args']));
-    $postId = intval($args['id']);
+
+    $postId = intval($args['id']);    
 
     // If the id given is 0, search the database for the most recent post, then add one to it.
     if ($postId === 0) {
@@ -42,6 +43,8 @@ if (isset($_POST['args'])) {
             $updatedArgs[$key] = $arg;
         }
     }
+    //error_log("updatedArgs:  " . $updatedArgs['EventStartDate'] . " - " . $updatedArgs['EventEndDate']);
+
     
     // If you're not getting any results, then edit line 102 in '\the-events-calendar\src\functions\advanced-functions\event.php' to 'return $postId;' to see error messages.
     echo json_encode(tribe_create_event($updatedArgs));

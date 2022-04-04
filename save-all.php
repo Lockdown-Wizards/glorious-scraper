@@ -11,8 +11,8 @@ $url = $_POST['url'];
 $table_name = $wpdb->prefix . "gr_fbgroups";
 $wpdb->update($table_name, array('url' => $url), array('id' => $id));
 
-error_log($id);
-error_log($url);
+//error_log($id);
+//error_log($url);
 
 header('Location: http://localhost/wordpress/wp-admin/admin.php?page=event-scraper'); // Development
 //header('Location: /wp-admin/admin.php?page=event-scraper'); // Production

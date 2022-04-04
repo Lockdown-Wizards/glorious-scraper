@@ -140,7 +140,9 @@ function gr_cronjob()
 			error_log(json_encode("Now scraping: " . $url->url));		
 			try {
 				$request = WpOrg\Requests\Requests::post(get_site_url() . "/wp-content/plugins/glorious-scraper/scraper.php", [], ['url' => $url->url]);
-				error_log("Scraper POST: " . $request->status_code);
+				$actionsTaken = ""; // Shows what events have been saved as drafts in 'the events calendar' plugin.
+				$actionsTaken .= "Scraper POST: " . $request->status_code . " \n";
+				//error_log("Scraper POST: " . $request->status_code);
 
 				// If the request was successful, then echo the request's body.	200 => OK
 				if ($request->status_code === 200) {
@@ -149,13 +151,21 @@ function gr_cronjob()
 					
 					// Add each event to 'the events calendar' plugin.
 					$eventsArgs = json_decode($request->body);
-					$actionsTaken = ""; // Shows what events have been saved as drafts in 'the events calendar' plugin.
+					
 
 					foreach ($eventsArgs as $args) {
-						if ($args->event->Location == "") {
+						// Trying to fix date issue...
+						error_log("Args in cronjob: " . $args->event->EventStartDate . " - " . $args->event->EventEndDate);
+						$args->event->EventStartDate = strtotime($args->event->EventStartDate);
+						$args->event->EventEndDate = strtotime($args->event->EventEndDate);
+						error_log("strtotime in cronjob:  " . $args->event->EventStartDate . " - " . $args->event->EventEndDate);
+
+						// no venue OR online 
+						if ($args->event->Location == "" || str_contains($args->event->Location, "http") ) {
 							try {
 								$requestEventScrape = WpOrg\Requests\Requests::post(get_site_url() . "/wp-content/plugins/glorious-scraper/set-event.php", [], ['args' => json_encode($args->event)]);
-								error_log("Set-Event POST: " . $requestEventScrape->status_code);
+								//error_log("Set-Event POST: " . $requestEventScrape->status_code);
+								$actionsTaken .= "Set-Event POST: " . $requestEventScrape->status_code . " \n";
 								$actionsTaken .= " (" . $args->event->Organizer . ") Draft set for '" . $args->event->post_title . "' with event id: " . $requestEventScrape->body . "\n";
 							} catch(Exception $e) {
 								error_log($e->getMessage());
@@ -165,24 +175,29 @@ function gr_cronjob()
 							try {
 								//error_log(print_r($args->venue, TRUE));
 								$requestVenueScrape = WpOrg\Requests\Requests::post(get_site_url() . "/wp-content/plugins/glorious-scraper/set-venue.php", [], ['args' => json_encode($args->venue)]);
-								error_log("Set-Venue POST: " . $requestVenueScrape->status_code);
+								//error_log("Set-Venue POST: " . $requestVenueScrape->status_code);
+								$actionsTaken .= "Set-Venue POST: " . $requestVenueScrape->status_code . " \n";
 								//error_log("Venue Request Body: " . $requestVenueScrape->body);
 								$actionsTaken .= "(" . $args->venue->City . ", " . $args->venue->State . ") Venue " . $args->venue->Venue . " with venue id: " . $requestVenueScrape->body . "\n";
 								
 								//error_log(print_r($args->event, TRUE));
 								$requestEventScrape = WpOrg\Requests\Requests::post(get_site_url() . "/wp-content/plugins/glorious-scraper/set-event.php", [], ['args' => json_encode($args->event)]);
-								error_log("Set-Event POST: " .$requestEventScrape->status_code);
+								//error_log("Set-Event POST: " . $requestEventScrape->status_code);
+								$actionsTaken .= "Set-Event POST: " . $requestEventScrape->status_code . " \n";
 								//error_log("Event Request Body: " . $requestEventScrape->body);
-								$actionsTaken .= " (" . $args->event->Organizer . ") Draft set for '" . $args->event->post_title . "' with event id: " . $requestEventScrape->body . "\n";
+								$actionsTaken .= " (" . $args->event->Organizer . ") Draft set for '" . $args->event->post_title . "' with event id: " . $requestEventScrape->body . " \n";
 
-								$venueId = $requestVenueScrape->body;
+								$venueId = str_replace('"', "", $requestVenueScrape->body);
 								$eventId = $requestEventScrape->body;
 								if (isset($venueId) && isset($eventId)) {
+									// this is false if there is true on a successful update - false for failure or if value passed is same as one already in database
 									$linkVenueToEvent = update_metadata('post', $eventId, '_EventVenueID', $venueId);
-									error_log("Setting venue for this event: " . ($linkVenueToEvent ? "Success" : "Failure") . "\n");
+									$actionsTaken .= "Setting venue (" . $venueId . "-" . gettype($venueId) .") for this event (" . $eventId .  "-" . gettype($venueId) . ") " . ($linkVenueToEvent ? "Success" : "Failure") . "\n";
+									//error_log("Setting venue (" . $venueId . "-" . gettype($venueId) .") for this event (" . $eventId .  "-" . gettype($venueId) . ") " . ($linkVenueToEvent ? "Success" : "Failure") . "\n");
 								}
 								else {
-									error_log( 'Either venueId or eventId was not supplied. ' . "venueID: " . $venueId . " and eventID: " . $eventId . "\n");
+									$actionsTaken .= 'Either venueId or eventId was not supplied. ' . "venueID: " . $venueId . " and eventID: " . $eventId . " \n";
+									//error_log( 'Either venueId or eventId was not supplied. ' . "venueID: " . $venueId . " and eventID: " . $eventId . "\n");
 								}
 
 							} catch(Exception $e) {
@@ -276,6 +291,11 @@ function admin_menu_init()
 				<?php
 				// False for not scheduled, otherwise returns timestamp
 				$gr_next_cronjob = wp_next_scheduled('gloriousrecovery_cronjob_hook');
+
+				if($gr_next_cronjob) {
+					$gr_next_cronjob_dt = DateTime::createFromFormat( 'U', $gr_next_cronjob );
+					//echo "Next Cronjob: " . $gr_next_cronjob_dt->format('Y-m-d H:i:s') . "<br>";
+				}
 				
 
 				// Used for Radio button section (cronjob recurrences)
@@ -283,47 +303,45 @@ function admin_menu_init()
 				
 				// Get current timezone
 				$gr_current_timezone = get_option('scraper_timezone');
-				error_log("Current timezone in Cronjob (1):" . $gr_current_timezone );
+				//error_log("Current timezone in Cronjob (1):" . $gr_current_timezone );
 				if(!$gr_current_timezone) {
 					$gr_current_timezone = 'America/New_York';
 				}
-				error_log("Current timezone in Cronjob (2):" . $gr_current_timezone );
+				//error_log("Current timezone in Cronjob:" . $gr_current_timezone );
 
+				// If there is a cronjob scheduled...
 				if ($gr_next_cronjob) {
 					$gr_timezone_here = new DateTimeZone($gr_current_timezone);
 					$gr_timezone_GMT = new DateTimeZone("Europe/London");
 
+					//$gr_cronjob_datetime = new DateTime($gr_next_cronjob, $gr_timezone_GMT);
 					
-					if(!$gr_next_cronjob) {
-						echo $gr_next_cronjob . " " . gettype($gr_next_cronjob) . "<br>";
-					}
-					else {
-						$gr_cronjob_datetime = new DateTime($gr_next_cronjob, $gr_timezone_GMT);
-						echo $gr_next_cronjob . " " . gettype($gr_next_cronjob) .  $gr_cronjob_datetime->format('Y-m-d H:i:s') ."<br>";
-					}
-				
+					//echo "Next Cronjob as UNIX timestamp:" . $gr_next_cronjob . " " . gettype($gr_next_cronjob) . "<br>";
+											
 					$gr_datetime_here = new DateTime("now", $gr_timezone_here);
 					$gr_datetime_GMT = new DateTime("now", $gr_timezone_GMT);
 
-					echo "Now here: " . $gr_datetime_here->format('Y-m-d H:i:s') . "<br>";
-					echo "Now GMT:  " . $gr_datetime_GMT->format('Y-m-d H:i:s') . "<br>";
+					//echo "Now here: " . $gr_datetime_here->format('Y-m-d H:i:s') . "<br>";
+					//echo "Now GMT:  " . $gr_datetime_GMT->format('Y-m-d H:i:s') . "<br>";
 
 					$gr_datetime_offset = timezone_offset_get($gr_timezone_here, $gr_datetime_GMT);
 
-					echo "offset:  " . $gr_datetime_offset . "<br>";
+					//echo "offset:  " . floor($gr_datetime_offset/3600) . "<br>";
 					$gr_next_cronjob += $gr_datetime_offset;
 
 					$gr_current_hour_24h = floor(($gr_next_cronjob % 86400) / (3600));
 					$gr_current_hour = $gr_cronjob_current_schedule == 'twicedaily' ? $gr_current_hour_24h % 12 : $gr_current_hour_24h; // hours after midnight
 					$gr_current_minutes = floor(($gr_next_cronjob % 3600) / (60)); // minutes after the hour
 
-					echo $gr_current_hour ."<br>";
-					echo $gr_current_minutes ."<br>";
 
 				} else {
 					$gr_current_hour =  0;
 					$gr_current_minutes = 0;
 				}
+				
+				//echo $gr_current_hour . "<br>";
+				//echo $gr_current_minutes . "<br>";
+
 				?>
 				<div>
 					<span>
