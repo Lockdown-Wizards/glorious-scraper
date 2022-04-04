@@ -155,10 +155,10 @@ function gr_cronjob()
 
 					foreach ($eventsArgs as $args) {
 						// Trying to fix date issue...
-						error_log("Args in cronjob: " . $args->event->EventStartDate . " - " . $args->event->EventEndDate);
+						//error_log("Args in cronjob: " . $args->event->EventStartDate . " - " . $args->event->EventEndDate);
 						$args->event->EventStartDate = strtotime($args->event->EventStartDate);
 						$args->event->EventEndDate = strtotime($args->event->EventEndDate);
-						error_log("strtotime in cronjob:  " . $args->event->EventStartDate . " - " . $args->event->EventEndDate);
+						//error_log("strtotime in cronjob:  " . $args->event->EventStartDate . " - " . $args->event->EventEndDate);
 
 						// no venue OR online 
 						if ($args->event->Location == "" || str_contains($args->event->Location, "http") ) {
