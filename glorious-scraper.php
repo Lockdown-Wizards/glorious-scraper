@@ -154,11 +154,12 @@ function gr_cronjob()
 					
 
 					foreach ($eventsArgs as $args) {
-						// Trying to fix date issue...
-						//error_log("Args in cronjob: " . $args->event->EventStartDate . " - " . $args->event->EventEndDate);
-						$args->event->EventStartDate = strtotime($args->event->EventStartDate);
-						$args->event->EventEndDate = strtotime($args->event->EventEndDate);
-						//error_log("strtotime in cronjob:  " . $args->event->EventStartDate . " - " . $args->event->EventEndDate);
+						$gr_ec_startdate_formatted = DateTime::createFromFormat( 'U', strtotime($args->event->EventStartDate) )->format('Y-m-d');
+						$gr_ec_enddate_formatted = DateTime::createFromFormat( 'U', strtotime($args->event->EventEndDate) )->format('Y-m-d');
+						//$actionsTaken .= " Args ESD/EED: "  . $args->event->EventStartDate . " " . $args->event->EventEndDate ;
+						$args->event->EventStartDate = $gr_ec_startdate_formatted;
+						$args->event->EventEndDate = $gr_ec_enddate_formatted;
+						//$actionsTaken .= " (changed) Args ESD:/EED "  . $args->event->EventStartDate . " " . $args->event->EventEndDate ;
 
 						// no venue OR online 
 						if ($args->event->Location == "" || str_contains($args->event->Location, "http") ) {
@@ -167,6 +168,11 @@ function gr_cronjob()
 								//error_log("Set-Event POST: " . $requestEventScrape->status_code);
 								$actionsTaken .= "Set-Event POST: " . $requestEventScrape->status_code . " \n";
 								$actionsTaken .= " (" . $args->event->Organizer . ") Draft set for '" . $args->event->post_title . "' with event id: " . $requestEventScrape->body . "\n";
+								
+								// Date testing
+								$actionsTaken .= "Tribe event start date for this event: " . tribe_get_start_date($requestEventScrape->body) . " and EventStartDate: " . $gr_ec_startdate_formatted .  "\n";
+								$actionsTaken .= "Tribe event end date for this event:   " . tribe_get_end_date($requestEventScrape->body) . " and EventEndDate: " . $gr_ec_enddate_formatted . "\n";
+
 							} catch(Exception $e) {
 								error_log($e->getMessage());
 							}
@@ -186,6 +192,19 @@ function gr_cronjob()
 								$actionsTaken .= "Set-Event POST: " . $requestEventScrape->status_code . " \n";
 								//error_log("Event Request Body: " . $requestEventScrape->body);
 								$actionsTaken .= " (" . $args->event->Organizer . ") Draft set for '" . $args->event->post_title . "' with event id: " . $requestEventScrape->body . " \n";
+
+								/* Testing..
+								$gr_event_fixed_times = array(
+									'ID' => $requestEventScrape->body,
+									'EventStartDate' => $gr_ec_startdate_formatted,
+									'EventEndDate' => $gr_ec_enddate_formatted
+								);
+							
+								tribe_create_event($gr_event_fixed_times);
+								*/
+
+								$actionsTaken .= "Tribe event start date for this event: " . tribe_get_start_date($requestEventScrape->body) . " and EventStartDate: " . $gr_ec_startdate_formatted .  "\n";
+								$actionsTaken .= "Tribe event end date for this event:   " . tribe_get_end_date($requestEventScrape->body) . " and EventEndDate: " . $gr_ec_enddate_formatted . "\n";
 
 								$venueId = str_replace('"', "", $requestVenueScrape->body);
 								$eventId = $requestEventScrape->body;
