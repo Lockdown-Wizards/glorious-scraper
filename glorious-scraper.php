@@ -206,6 +206,10 @@ function gr_cronjob()
 	error_log("<<< Leaving gr_cronjob()");
 }
 
+function test_cron_job() {
+	include 'cron-job.php';
+}
+
 
 function admin_menu_init()
 {
@@ -228,7 +232,14 @@ function admin_menu_init()
 		<?php if ($configs["enableEventsExistenceTest"]) { ?>
 			<section>
 				<button id="eventExistenceTest">Test Event Existence Endpoint</button>
-				<script class="btn" src="../wp-content/plugins/glorious-scraper/check-events-existence-test.js"></script>
+				<script src="../wp-content/plugins/glorious-scraper/check-events-existence-test.js"></script>
+			</section>
+		<?php } ?>
+
+		<?php if ($configs["enableCronjobTest"]) { ?>
+			<section>
+				<button id="cronjobTest">Test Cronjob</button>
+				<script src="../wp-content/plugins/glorious-scraper/cron-job-test.js"></script>
 			</section>
 		<?php } ?>
 
