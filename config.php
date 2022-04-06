@@ -2,6 +2,7 @@
 
 return [
     'isDevelopment' => true,
+    'enableEventsExistenceTest' => true,
 ];
 
 ?>
