@@ -1,6 +1,7 @@
 let cronJobTestButton = document.getElementById("cronjobTest");
 
 cronJobTestButton.addEventListener("click", () => {
+    console.log("Testing cron job functionality...");
     cronjobTest().then((result) => {
         console.log(result);
     });

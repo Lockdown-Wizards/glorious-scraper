@@ -6,6 +6,9 @@
  *
 */
 
+// Sets a 2 hour execution time limit
+set_time_limit(7200);
+
 // Access the plugin config
 $configs = include('config.php');
 
@@ -54,14 +57,24 @@ if (count($eventLinks) <= 0) {
 
 // Create an Event object for each link.
 $events = [];
-foreach($eventLinks as $eventLink) {
-    $events[] = new Event($eventLink);
+foreach($eventLinks as $index => $eventLink) {
+    if ($index < $configs["limit"]) {
+        $events[] = new Event($eventLink);
+    }
+    else {
+        break;
+    }
 }
 
 // Create a Venue object for each link.
 $venues = [];
-foreach($eventLinks as $eventLink) {
-    $venues[] = new Venue();
+foreach($eventLinks as $index => $eventLink) {
+    if ($index < $configs["limit"]) {
+        $venues[] = new Venue();
+    }
+    else {
+        break;
+    }
 }
 
 // For every link, scrape it for relevant event info.
@@ -139,24 +152,33 @@ foreach($events as $i => $event) {
 echo json_encode($eventsArgs);
 
 function proxy_request($url) {
-    $ch = curl_init(); // get cURL resource
-    curl_setopt($ch, CURLOPT_URL, $url); // set url
-    curl_setopt($ch, CURLOPT_PROXY, "http://E6bqOoPT8vG26HmCIwhb-Q@smartproxy.proxycrawl.com:8012"); // set proxy
-    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false); // Disable SSL verification (Mandatory for HTTPS requests)
-    curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'GET'); // set method
-    curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1); // return the transfer as a string
-    curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
-    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
-    $response = curl_exec($ch); // send the request and save response to $response
-    curl_close($ch); // close curl resource to free up system resources
+    global $configs;
+    $attempts = intval($configs["maxAttempts"]);
+    $success = false;
+    while ($attempts > 0) {
+        $ch = curl_init(); // get cURL resource
+        curl_setopt($ch, CURLOPT_URL, $url); // set url
+        curl_setopt($ch, CURLOPT_PROXY, "http://E6bqOoPT8vG26HmCIwhb-Q@smartproxy.proxycrawl.com:8012"); // set proxy
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false); // Disable SSL verification (Mandatory for HTTPS requests)
+        curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'GET'); // set method
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1); // return the transfer as a string
+        curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
+        $response = curl_exec($ch); // send the request and save response to $response
+        curl_close($ch); // close curl resource to free up system resources
 
-    if (!$response) {
-        error_log('Error: "'.curl_error($ch).'" - Code: '.curl_errno($ch));
-        return false;
+        if ($response) {
+            // Successful scrape
+            $success = true;
+            return $response;
+        }
+        $attempts--;
     }
-    else {
-        return $response;
-    }
+
+    //if (!$success) {
+    error_log('Error: "'.curl_error($ch).'" - Code: '.curl_errno($ch));
+    return false;
+    //}
 }
 
 // Takes a url like 'https://mbasic.facebook.com/FairfieldCARES/events/?ref=page_internal' and removes the 'https://mbasic.facebook.com' portion of the url.
@@ -235,7 +257,12 @@ function extract_fb_event_image($dom) {
     $eventHeaderElem = $dom->getElementById('event_header');
     if ($eventHeaderElem !== null) {
         $images = $eventHeaderElem->getElementsByTagName('img');
-        return $images->item(0)->getAttribute("src");
+        if ($images->count() > 0) {
+            return $images->item(0)->getAttribute("src");
+        }
+        else {
+            return "";
+        }
     }
     else {
         return "";
@@ -317,7 +344,12 @@ function extract_fb_event_organization($dom) {
 function extract_fb_event_organization_url($dom) {
     $finder = new DomXPath($dom);
     $nodes = $finder->query("//div[contains(text(), '·')]"); // The element which contains the organization name is the only one with '·' in its text.
-    return $nodes->item(0)->getElementsByTagName('a')->item(0)->getAttribute("href"); // Find the <a> tag in this container, then extract the url.
+    if ($nodes->count() > 0) {
+        return $nodes->item(0)->getElementsByTagName('a')->item(0)->getAttribute("href"); // Find the <a> tag in this container, then extract the url.
+    }
+    else {
+        return "";
+    }
 }
 
 // Given an events page, find and extract the event description.

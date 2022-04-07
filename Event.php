@@ -201,7 +201,13 @@ class Event
     }
     private function get_minutes($time_str)
     {
-        return substr(explode(":", $time_str)[1], 0, 2);
+        $split_time = explode(":", $time_str);
+        if (count($split_time) > 1) {
+            return substr(explode(":", $time_str)[1], 0, 2);
+        }
+        else {
+            return "";
+        }
     }
 
     public function is_online()

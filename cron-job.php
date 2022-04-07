@@ -24,7 +24,11 @@ $table_name = $wpdb->prefix . "gr_fbgroups";
 $urls = $wpdb->get_results("SELECT * FROM $table_name");
 
 // Keep all cron-job activity logged within the log variable
-$log = [];
+$log = [
+    "limit" => $configs["limit"],
+    "results" => null
+];
+$results = [];
 
 /*foreach ($urls as $i => $url) {
     if ($i+1 === count($urls)) {
@@ -37,20 +41,37 @@ $log = [];
 
 foreach ($urls as $i => $url) {
     // Try to retrieve a page from facebook multiple times. If all tries fail, move on.
-    $attempts = 6;
+    $attempts = intval($configs["maxAttempts"]);
     $success = false;
+    $response = null;
     while ($attempts > 0 && !$success) {
         $response = WpOrg\Requests\Requests::post(get_site_url() . "/wp-content/plugins/glorious-scraper/scraper.php", [], ['url' => $url->url], ['timeout' => 1728000]);
-        if ($response->status_code === 200 && $response->body !== "false") {
-            $log = $response;
+        if ($response->body !== "false") {
+            $results[$i] = [
+                "url" => $url->url,
+                "result" => $response,
+                "status" => ""
+            ];
             $success = true;
         }
         $attempts--;
     }
     if (!$success) {
-        $log = "No more attempts left to try.";
+        $results[$i] = [
+            "url" => $url->url,
+            "result" => $response,
+            "status" => "No more attempts left to try."
+        ];
     }
 }
+
+$log["results"] = $results;
+
+/*foreach ($log->results as $result) {
+    if ($result->result !== false) {
+
+    }
+}*/
 
 // Send each url to the scraper
 //error_log(implode(", ", $urls));
