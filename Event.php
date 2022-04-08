@@ -192,7 +192,15 @@ class Event
 
     private function get_meridian($time_str)
     {
-        return str_contains($time_str, "PM") ? "PM" : "AM";
+        if (str_contains($time_str, "PM")) {
+            return "PM";
+        }
+        else if (str_contains($time_str, "AM")) {
+            return "AM";
+        }
+        else {
+            return "";
+        }
     }
     private function get_hour($time_str)
     {
@@ -241,7 +249,7 @@ class Event
     public function to_args()
     {
         $facebook_base_url = 'https://www.facebook.com';
-        return [
+        $args = [
             'id' => $this->event_id,
             'post_title' => $this->title,
             'EventURL' => $facebook_base_url . $this->url,
@@ -252,13 +260,18 @@ class Event
             'EventEndDate' => $this->end_date,
             'EventStartHour' => $this->get_hour($this->start_time),
             'EventStartMinute' => $this->get_minutes($this->start_time),
-            'EventStartMeridian' => $this->get_meridian($this->start_time),
+            //'EventStartMeridian' => $this->get_meridian($this->start_time),
             'EventEndHour' => $this->get_hour($this->end_time),
             'EventEndMinute' => $this->get_minutes($this->end_time),
-            'EventEndMeridian' => $this->get_meridian($this->end_time),
+            //'EventEndMeridian' => $this->get_meridian($this->end_time),
             'FeaturedImage' => $this->image,
             'Organizer' => $this->organization,
             'comment_status' => 'open',
         ];
+
+        if ($this->get_meridian($this->start_time) !== "") $args['EventStartMeridian'] = $this->get_meridian($this->start_time);
+        if ($this->get_meridian($this->end_time) !== "") $args['EventEndMeridian'] = $this->get_meridian($this->end_time);
+
+        return $args;
     }
 }

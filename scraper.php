@@ -244,7 +244,14 @@ function extract_fb_event_datetime($dom) {
         $imageSrc = 'https://static.xx.fbcdn.net/rsrc.php/v3/yL/r/HvJ9U6sdYns.png';
         $nodes = $finder->query("//img[contains(@src, '$imageSrc')]");
         if ($nodes->count() > 0) {
-            return $nodes->item(0)->parentNode->parentNode->textContent;
+            $container = $nodes->item(0)->parentNode->parentNode;
+            $containerNodes = $container->getElementsByTagName("dt");
+            if ($containerNodes->count() > 0) {
+                return $containerNodes->item(0)->textContent;
+            }
+            else {
+                return $nodes->item(0)->parentNode->parentNode->textContent;
+            }
         }
         else {
             return "";
@@ -366,7 +373,13 @@ function extract_fb_event_description($dom) {
 
 // Extracts the start time from a date time string obtained from the 'extract_fb_event_datetime' function.
 function start_date_from_datetime($datetime) {
-    return explode(" at ", $datetime)[0];
+    $exploded = explode(" at ", $datetime);
+    if (count($exploded) > 1) {
+        return $exploded[0];
+    }
+    else {
+        return explode(" from ", $datetime)[0];
+    }
 }
 
 // Extracts the start time from a date time string obtained from the 'extract_fb_event_datetime' function.
@@ -375,6 +388,9 @@ function start_time_from_datetime($datetime) {
     $times = null;
     if (count($timeSplit) > 1) {
         $times = $timeSplit[1];
+    }
+    else if (count(explode(" from ", $datetime)) > 1) {
+        $times = explode(" from ", $datetime)[1];
     }
     else {
         return "";
@@ -418,6 +434,13 @@ function end_date_from_datetime($datetime) {
         return explode(" at ", $endDatetime)[0];
     }
     else {
+        $exploded = explode(" at ", $datetime);
+        if (count($exploded) > 1) {
+            return $exploded[0];
+        }
+        else {
+            return explode(" from ", $datetime)[0];
+        }
         return explode(" at ", $datetime)[0];
     }
 }
@@ -467,6 +490,9 @@ function end_time_from_datetime($datetime) {
         $timeStr = null;
         if (count($timeSplit) > 1) {
             $timeStr = $timeSplit[1];
+        }
+        else if (count(explode(" from ", $datetime)) > 1) {
+            $timeStr = explode(" from ", $datetime)[1];
         }
         else {
             return "";
