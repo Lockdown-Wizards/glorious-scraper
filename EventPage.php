@@ -88,8 +88,38 @@ class EventPage
             "event_status" => $this->event_status,
             "venue" => $this->venue,
             "has_created_venue" => $this->has_created_venue,
-            "venue_status" => $this->venue_status
+            "venue_status" => $this->venue_status,
         ];
+    }
+
+    public function serialize_to_text() {
+        $indent = '   ';
+        $bullet_point = '|-- ';
+
+        $log_entry = $indent . $bullet_point . "Event Page Url: " . $this->url;
+        $log_entry .= "\n" . $indent . $bullet_point . "Raw Scraped Event Data: " . json_encode($this->event);
+        $log_entry .= "\n" . $indent . $bullet_point . "Event Creation Successful: " . $this->has_created_event;
+        $log_entry .= "\n" . $indent . $bullet_point . "Event Creation Error: " . $this->event_status;
+        $log_entry .= "\n" . $indent . $bullet_point . "Raw Scraped Venue Data: " . json_encode($this->venue);
+        $log_entry .= "\n" . $indent . $bullet_point . "Venue Creation Successful: " . $this->has_created_venue;
+        $log_entry .= "\n" . $indent . $bullet_point . "Venue Creation Error: " . $this->venue_status;
+
+        return $log_entry;
+    }
+
+    // Helper function for serialize_to_log function
+    private function minify_html($html) {
+        return preg_replace(
+            array(
+                '/ {2,}/',
+                '/<!--.*?-->|\t|(?:\r?\n[ \t]*)+/s'
+            ),
+            array(
+                ' ',
+                ''
+            ),
+            $html
+        );
     }
 }
 ?>

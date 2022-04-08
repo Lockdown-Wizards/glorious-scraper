@@ -5,7 +5,8 @@ return [
     'enableEventsExistenceTest' => true,
     'enableCronjobTest' => true,
     'limit' => 1,
-    'maxAttempts' => 6
+    'maxAttempts' => 6,
+    'enableCronjobLogger' => true
 ];
 
 ?>

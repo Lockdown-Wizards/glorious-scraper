@@ -36,6 +36,7 @@ foreach ($urls as $i => $url) {
 // Scrape each group page.
 foreach ($group_pages as $i => $group_page) {
     // Try to retrieve a group page from facebook multiple times. If all tries fail, move on.
+    $start_time = time(); // Set up a timer so we can monitor execution times.
     $attempts = intval($configs["maxAttempts"]);
     $success = false;
     $response = null;
@@ -44,6 +45,7 @@ foreach ($group_pages as $i => $group_page) {
         if ($response->body !== "false") {
             $group_page->set_scrape($response->body);
             $group_page->set_has_scraped(true);
+            $group_page->set_execution_time(time() - $start_time);
             //$group_page->set_scrape_status("");
             $success = true;
         }
@@ -53,6 +55,7 @@ foreach ($group_pages as $i => $group_page) {
         $group_page->set_scrape($response->body);
         //$group_page->set_has_scraped(false);
         $group_page->set_scrape_status("No more attempts left to try.");
+        $group_page->set_execution_time(time() - $start_time);
     }
 }
 
@@ -110,11 +113,38 @@ foreach ($group_pages as $group_page) {
     }
 }
 
-// Prepare the results of the scrape for sending back to the front end (for testing purposes)
-$results = [];
-foreach ($group_pages as $group_page) {
-    $results[] = $group_page->serialize();
+
+if ($configs["enableCronjobLogger"]) {
+    // Write all data obtained during the scrape into a seperate log file within the log folder.
+    write_group_pages_to_log($group_pages);
+    echo json_encode("Cron-job completed.");
+}
+else {
+    // Prepare the results of the scrape for sending back to the front end (for testing purposes)
+    $results = [];
+    foreach ($group_pages as $group_page) {
+        $results[] = $group_page->serialize();
+    }
+    echo json_encode($results);
 }
 
-echo json_encode($results);
+function write_group_pages_to_log($group_pages) {
+    // Get time to differentiate log file
+    $date = new DateTime('now');
+    $date->setTimezone(new DateTimeZone('America/New_York'));
+    $date_str = $date->format('Y-m-d_H_i_s');
+
+    // Create the text log
+    $log_text = "";
+    foreach ($group_pages as $index => $group_page) {
+        $log_text .= "Group Page #" . ($index+1);
+        $log_text .=  "\n" . $group_page->serialize_to_text();
+    }
+
+    // Write to the log file
+    $log_file_name = plugin_dir_path( __FILE__ ).'\\logs\\scrape_log_' . $date_str . '.txt';
+    $log_file = fopen($log_file_name, 'w');
+    fwrite($log_file, $log_text);
+    return fclose($log_file);
+}
 ?>
