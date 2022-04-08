@@ -79,6 +79,9 @@ class Glorious_Scraper_Deactivator {
 		 * Perform your deactivation actions here.
 		 */
 
+		 // Deactivate the cron-job
+		$timestamp = wp_next_scheduled( 'gr_cron_hook' );
+    	wp_unschedule_event( $timestamp, 'gr_cron_hook' );
 	}
 
 	/**
