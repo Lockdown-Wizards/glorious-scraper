@@ -123,6 +123,24 @@ function localize_urls()
 	wp_localize_script('glorious_scraper', 'gloriousData', ['urls' => $urls]);
 }
 
+function formatted_time($sec) {
+	$ret = [];
+	$bit = array(
+		'y' => $sec / 31556926 % 12,
+		'w' => $sec / 604800 % 52,
+		'd' => $sec / 86400 % 7,
+		'h' => $sec / 3600 % 24,
+		'm' => $sec / 60 % 60,
+		's' => $sec % 60
+		);
+		
+	foreach($bit as $k => $v)
+		if($v > 0)$ret[] = $v . $k;
+		
+	return join(' ', $ret);
+	// Output example: 6d 15h 48m 19s
+}
+
 function admin_menu_init()
 {
 	global $urls;
@@ -164,23 +182,23 @@ function admin_menu_init()
 								// On load, check if an organization has been entered. If so, autofill the input box.
 								$organization_opt = get_option('scraper_organization_name');
 								echo $organization_opt ? $organization_opt : '';
-								?>" placeholder="Organization Name" name="organization" />
+								?>" placeholder="Organization Name" name="organization" required/>
 				<input type='submit' href="JavaScript:void(0);" class="btn btn-dark" value="Set Organization" />
 			</form>
 
 			<h3>Scheduled Scrape Time</h3>
 			<?php if (wp_next_scheduled( 'gr_cron_hook' )) { ?>
 				<div>
-					Next cron job scheduled to happen at <?php echo wp_next_scheduled( 'gr_cron_hook' ) ?>
+					Next cron job scheduled to happen in <?php echo formatted_time(wp_next_scheduled( 'gr_cron_hook' ) - time()); ?>. Current cron interval set to '<?php echo get_option('gr_cron_option'); ?>'.
 				</div>
 			<?php } ?>
 			<form method="POST" action="../wp-content/plugins/glorious-scraper/set-cronjob.php">
 				<div>
-					<input type="radio" id="cronChoice2" name="cronjobRecurrence" value="daily" checked="true">
-					<label for="cronChoice2">Daily</label>
+					<input type="radio" id="cronChoice" name="cronjobRecurrence" value="daily" checked="true">
+					<label for="cronChoice">Daily</label>
 
-					<input type="radio" id="cronChoice3" name="cronjobRecurrence" value="twicedaily">
-					<label for="cronChoice3">Twice Daily</label>
+					<input type="radio" id="cronChoice2" name="cronjobRecurrence" value="twicedaily">
+					<label for="cronChoice2">Twice Daily</label>
 				</div>
 				<br>
 				<input type='submit' href="JavaScript:void(0);" class="btn btn-dark" value='Set Cronjob From Now' />

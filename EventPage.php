@@ -98,10 +98,10 @@ class EventPage
 
         $log_entry = $indent . $bullet_point . "Event Page Url: " . $this->url;
         $log_entry .= "\n" . $indent . $bullet_point . "Raw Scraped Event Data: " . json_encode($this->event);
-        $log_entry .= "\n" . $indent . $bullet_point . "Event Creation Successful: " . $this->has_created_event;
+        $log_entry .= "\n" . $indent . $bullet_point . "Event Creation Successful: " . ($this->has_created_event ? "true" : "false");
         $log_entry .= "\n" . $indent . $bullet_point . "Event Creation Error: " . $this->event_status;
         $log_entry .= "\n" . $indent . $bullet_point . "Raw Scraped Venue Data: " . json_encode($this->venue);
-        $log_entry .= "\n" . $indent . $bullet_point . "Venue Creation Successful: " . $this->has_created_venue;
+        $log_entry .= "\n" . $indent . $bullet_point . "Venue Creation Successful: " . ($this->has_created_venue ? "true" : "false");
         $log_entry .= "\n" . $indent . $bullet_point . "Venue Creation Error: " . $this->venue_status;
 
         return $log_entry;

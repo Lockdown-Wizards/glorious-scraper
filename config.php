@@ -2,8 +2,8 @@
 
 return [
     'isDevelopment' => true,
-    'enableEventsExistenceTest' => true,
-    'enableCronjobTest' => true,
+    'enableEventsExistenceTest' => false,
+    'enableCronjobTest' => false,
     'limit' => 1,
     'maxAttempts' => 6,
     'enableCronjobLogger' => true

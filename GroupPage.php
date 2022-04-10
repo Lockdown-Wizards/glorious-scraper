@@ -74,6 +74,7 @@ class GroupPage
         $this->execution_time = $seconds;
     }
     public function get_formatted_execution_time() {
+        $ret = [];
         $bit = array(
             'y' => $this->execution_time / 31556926 % 12,
             'w' => $this->execution_time / 604800 % 52,
@@ -116,7 +117,7 @@ class GroupPage
 
         $log_entry = $bullet_point . "Group Page Url: " . $this->url;
         $log_entry .= "\n" . $bullet_point . "Raw Scraped Data: " . $this->scrape;
-        $log_entry .= "\n" . $bullet_point . "Scrape Successful: " . $this->has_scraped;
+        $log_entry .= "\n" . $bullet_point . "Scrape Successful: " . ($this->has_scraped ? "true" : "false");
         $log_entry .= "\n" . $bullet_point . "Scrape Error: " . $this->scrape_status;
         $log_entry .= "\n" . $bullet_point . "Execution Time: " . $this->get_formatted_execution_time();
         foreach ($this->event_pages as $i => $event_page) {
