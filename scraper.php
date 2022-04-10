@@ -6,6 +6,9 @@
  *
 */
 
+// Sets a 2 hour execution time limit
+set_time_limit(7200);
+
 // Access the plugin config
 $configs = include('config.php');
 
@@ -54,14 +57,24 @@ if (count($eventLinks) <= 0) {
 
 // Create an Event object for each link.
 $events = [];
-foreach($eventLinks as $eventLink) {
-    $events[] = new Event($eventLink);
+foreach($eventLinks as $index => $eventLink) {
+    if ($index < $configs["limit"]) {
+        $events[] = new Event($eventLink);
+    }
+    else {
+        break;
+    }
 }
 
 // Create a Venue object for each link.
 $venues = [];
-foreach($eventLinks as $eventLink) {
-    $venues[] = new Venue();
+foreach($eventLinks as $index => $eventLink) {
+    if ($index < $configs["limit"]) {
+        $venues[] = new Venue();
+    }
+    else {
+        break;
+    }
 }
 
 // For every link, scrape it for relevant event info.
@@ -139,24 +152,33 @@ foreach($events as $i => $event) {
 echo json_encode($eventsArgs);
 
 function proxy_request($url) {
-    $ch = curl_init(); // get cURL resource
-    curl_setopt($ch, CURLOPT_URL, $url); // set url
-    curl_setopt($ch, CURLOPT_PROXY, "http://E6bqOoPT8vG26HmCIwhb-Q@smartproxy.proxycrawl.com:8012"); // set proxy
-    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false); // Disable SSL verification (Mandatory for HTTPS requests)
-    curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'GET'); // set method
-    curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1); // return the transfer as a string
-    curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
-    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
-    $response = curl_exec($ch); // send the request and save response to $response
-    curl_close($ch); // close curl resource to free up system resources
+    global $configs;
+    $attempts = intval($configs["maxAttempts"]);
+    $success = false;
+    while ($attempts > 0) {
+        $ch = curl_init(); // get cURL resource
+        curl_setopt($ch, CURLOPT_URL, $url); // set url
+        curl_setopt($ch, CURLOPT_PROXY, "http://E6bqOoPT8vG26HmCIwhb-Q@smartproxy.proxycrawl.com:8012"); // set proxy
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false); // Disable SSL verification (Mandatory for HTTPS requests)
+        curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'GET'); // set method
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1); // return the transfer as a string
+        curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
+        $response = curl_exec($ch); // send the request and save response to $response
+        curl_close($ch); // close curl resource to free up system resources
 
-    if (!$response) {
-        error_log('Error: "'.curl_error($ch).'" - Code: '.curl_errno($ch));
-        return false;
+        if ($response) {
+            // Successful scrape
+            $success = true;
+            return $response;
+        }
+        $attempts--;
     }
-    else {
-        return $response;
-    }
+
+    //if (!$success) {
+    error_log('Error: "'.curl_error($ch).'" - Code: '.curl_errno($ch));
+    return false;
+    //}
 }
 
 // Takes a url like 'https://mbasic.facebook.com/FairfieldCARES/events/?ref=page_internal' and removes the 'https://mbasic.facebook.com' portion of the url.
@@ -222,7 +244,14 @@ function extract_fb_event_datetime($dom) {
         $imageSrc = 'https://static.xx.fbcdn.net/rsrc.php/v3/yL/r/HvJ9U6sdYns.png';
         $nodes = $finder->query("//img[contains(@src, '$imageSrc')]");
         if ($nodes->count() > 0) {
-            return $nodes->item(0)->parentNode->parentNode->textContent;
+            $container = $nodes->item(0)->parentNode->parentNode;
+            $containerNodes = $container->getElementsByTagName("dt");
+            if ($containerNodes->count() > 0) {
+                return $containerNodes->item(0)->textContent;
+            }
+            else {
+                return $nodes->item(0)->parentNode->parentNode->textContent;
+            }
         }
         else {
             return "";
@@ -235,7 +264,12 @@ function extract_fb_event_image($dom) {
     $eventHeaderElem = $dom->getElementById('event_header');
     if ($eventHeaderElem !== null) {
         $images = $eventHeaderElem->getElementsByTagName('img');
-        return $images->item(0)->getAttribute("src");
+        if ($images->count() > 0) {
+            return $images->item(0)->getAttribute("src");
+        }
+        else {
+            return "";
+        }
     }
     else {
         return "";
@@ -317,7 +351,12 @@ function extract_fb_event_organization($dom) {
 function extract_fb_event_organization_url($dom) {
     $finder = new DomXPath($dom);
     $nodes = $finder->query("//div[contains(text(), '·')]"); // The element which contains the organization name is the only one with '·' in its text.
-    return $nodes->item(0)->getElementsByTagName('a')->item(0)->getAttribute("href"); // Find the <a> tag in this container, then extract the url.
+    if ($nodes->count() > 0) {
+        return $nodes->item(0)->getElementsByTagName('a')->item(0)->getAttribute("href"); // Find the <a> tag in this container, then extract the url.
+    }
+    else {
+        return "";
+    }
 }
 
 // Given an events page, find and extract the event description.
@@ -334,7 +373,13 @@ function extract_fb_event_description($dom) {
 
 // Extracts the start time from a date time string obtained from the 'extract_fb_event_datetime' function.
 function start_date_from_datetime($datetime) {
-    return explode(" at ", $datetime)[0];
+    $exploded = explode(" at ", $datetime);
+    if (count($exploded) > 1) {
+        return $exploded[0];
+    }
+    else {
+        return explode(" from ", $datetime)[0];
+    }
 }
 
 // Extracts the start time from a date time string obtained from the 'extract_fb_event_datetime' function.
@@ -343,6 +388,9 @@ function start_time_from_datetime($datetime) {
     $times = null;
     if (count($timeSplit) > 1) {
         $times = $timeSplit[1];
+    }
+    else if (count(explode(" from ", $datetime)) > 1) {
+        $times = explode(" from ", $datetime)[1];
     }
     else {
         return "";
@@ -386,6 +434,13 @@ function end_date_from_datetime($datetime) {
         return explode(" at ", $endDatetime)[0];
     }
     else {
+        $exploded = explode(" at ", $datetime);
+        if (count($exploded) > 1) {
+            return $exploded[0];
+        }
+        else {
+            return explode(" from ", $datetime)[0];
+        }
         return explode(" at ", $datetime)[0];
     }
 }
@@ -435,6 +490,9 @@ function end_time_from_datetime($datetime) {
         $timeStr = null;
         if (count($timeSplit) > 1) {
             $timeStr = $timeSplit[1];
+        }
+        else if (count(explode(" from ", $datetime)) > 1) {
+            $timeStr = explode(" from ", $datetime)[1];
         }
         else {
             return "";

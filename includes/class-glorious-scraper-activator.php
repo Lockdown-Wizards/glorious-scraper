@@ -84,7 +84,7 @@ class Glorious_Scraper_Activator {
 		 * Perform your activation actions here.
 		 */
 		install_fbgroups_table();
-		install_events_table();
+		//install_events_table();
 		install_fb_categories_in_the_events_calendar();
 	}
 
