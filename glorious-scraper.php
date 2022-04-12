@@ -186,22 +186,132 @@ function admin_menu_init()
 				<input type='submit' href="JavaScript:void(0);" class="btn btn-dark" value="Set Organization" />
 			</form>
 
-			<h3>Scheduled Scrape Time</h3>
-			<?php if (wp_next_scheduled( 'gr_cron_hook' )) { ?>
+			<h3>Cron Job</h3>
+			<?php
+				// False for not scheduled, otherwise returns timestamp
+				$gr_next_cronjob = wp_next_scheduled('gr_cron_hook');
+				$gr_cron_schedule = get_option('gr_cron_option');
+				$gr_current_timezone = get_option('scraper_timezone');		// we might want to look at using wp_get_schedule() instead
+
+				if(!$gr_current_timezone) {
+					$gr_current_timezone = 'America/New_York';
+				}
+
+				// If there is a cronjob scheduled...
+				if ($gr_next_cronjob) {
+					$gr_timezone_here = new DateTimeZone($gr_current_timezone);
+					$gr_timezone_GMT = new DateTimeZone("Europe/London");
+					$gr_datetime_here = new DateTime("now", $gr_timezone_here);
+					$gr_datetime_GMT = new DateTime("now", $gr_timezone_GMT);
+
+					$gr_datetime_offset = timezone_offset_get($gr_timezone_here, $gr_datetime_GMT);
+					$gr_next_cronjob += $gr_datetime_offset;
+
+					$gr_current_hour_24h = floor(($gr_next_cronjob % 86400) / (3600));
+					$gr_current_hour = $gr_cron_schedule == 'twicedaily' ? $gr_current_hour_24h % 12 : $gr_current_hour_24h; // hours after midnight
+					$gr_current_minutes = floor(($gr_next_cronjob % 3600) / (60)); 								// minutes after the hour
+					
+					if($gr_next_cronjob) {
+						$gr_next_cronjob_dt = DateTime::createFromFormat( 'U', $gr_next_cronjob );
+					}
+				} else {
+					$gr_current_hour =  0;
+					$gr_current_minutes = 0;
+				} 
+
+				?>
+
+			<?php if ($gr_next_cronjob) { ?>
 				<div>
-					Next cron job scheduled to happen in <?php echo formatted_time(wp_next_scheduled( 'gr_cron_hook' ) - time()); ?>. Current cron interval set to '<?php echo get_option('gr_cron_option'); ?>'.
+					Next cron job scheduled to happen in <?php echo formatted_time(wp_next_scheduled('gr_cron_hook') - time()); ?> at <?php echo $gr_next_cronjob_dt->format('h:i:s A');?>.
 				</div>
 			<?php } ?>
+			<br>
+			You can choose to set the cron job to execute in 15 seconds by selecting a recurrence of daily or twice daily and pressing the button here:
+			<br>
+			<br>
 			<form method="POST" action="../wp-content/plugins/glorious-scraper/set-cronjob.php">
 				<div>
-					<input type="radio" id="cronChoice" name="cronjobRecurrence" value="daily" checked="true">
+					<input type="hidden" name="hours" value="-1"> 
+					<input type="hidden" name="minutes" value="-1"> 
+					
+					<input type="radio" id="cronChoice" name="cronjobRecurrence" value="daily" <?php if($gr_cron_schedule == "daily") echo "checked"; ?> >
 					<label for="cronChoice">Daily</label>
+					<br>
 
-					<input type="radio" id="cronChoice2" name="cronjobRecurrence" value="twicedaily">
+					<input type="radio" id="cronChoice2" name="cronjobRecurrence" value="twicedaily" <?php if($gr_cron_schedule == "twicedaily") echo "checked"; ?> >
 					<label for="cronChoice2">Twice Daily</label>
 				</div>
 				<br>
 				<input type='submit' href="JavaScript:void(0);" class="btn btn-dark" value='Set Cronjob From Now' />
+			</form>
+			<br>
+			Alternatively, you can choose to have the cron job execute at a scheduled time in the day by selecting an hour and minute, as well as a recurrence here: 
+			<br>
+			<br>
+			<form method="POST" action="../wp-content/plugins/glorious-scraper/set-cronjob.php">
+				<div>
+					<span>
+						<label for='hours'>Hour:</label>
+						<select name='hours' id='hours'>
+							<?php
+							for ($i = 0; $i <= 23; $i++) {
+								if ($i == (int) $gr_current_hour) {
+									if ($i < 10) {
+										echo "<option value='0$i' selected>0$i</option>";
+									} else {
+										echo "<option value='$i' selected>$i</option>";
+									}
+								} else {
+									if ($i < 10) {
+										echo "<option value='0$i'>0$i</option>";
+									} else {
+										echo "<option value='$i'>$i</option>";
+									}
+								}
+							}
+							?>
+						</select>
+					</span>
+					<span>
+						<label for='minutes'>Minute:</label>
+						<select name='minutes' id='minutes'>
+
+							<?php
+							for ($i = 0; $i <= 59; $i++) {
+								// Make sure it is selected
+								if ($i == (int) $gr_current_minutes) {
+									if ($i < 10)
+										echo "<option value='0$i' selected>0$i</option>";
+									else
+										echo "<option value='$i' selected>$i</option>";
+								} else {
+									if ($i < 10)
+										echo "<option value='0$i'>0$i</option>";
+									else
+										echo "<option value='$i'>$i</option>";
+								}
+							}
+							?>
+						</select>
+					</span>
+					<br>
+					<br>
+				</div>
+				<div>
+					<input type="radio" id="cronChoice1" name="cronjobRecurrence" value="none" <?php if($gr_cron_schedule == "none") echo "checked"; ?>>
+					<label for="cronChoice1">None</label>
+					<br>
+
+					<input type="radio" id="cronChoice" name="cronjobRecurrence" value="daily" <?php if($gr_cron_schedule == "daily") echo "checked"; ?>>
+					<label for="cronChoice">Daily</label>
+					<br>
+
+					<input type="radio" id="cronChoice2" name="cronjobRecurrence" value="twicedaily" <?php if($gr_cron_schedule == "twicedaily") echo "checked"; ?>>
+					<label for="cronChoice2">Twice Daily</label>
+				</div>
+				<br>
+				<input type='submit' href="JavaScript:void(0);" class="btn btn-dark" value='Schedule Cronjob' />
 			</form>
 
 			<hr style="margin: 10px 0;">
