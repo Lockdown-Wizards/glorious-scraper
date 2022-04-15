@@ -191,6 +191,10 @@ function admin_menu_init()
 				// False for not scheduled, otherwise returns timestamp
 				$gr_next_cronjob = wp_next_scheduled('gr_cron_hook');
 				$gr_cron_schedule = get_option('gr_cron_option');
+				error_log("Cron Sched in glorious_scraper.php: " . $gr_cron_schedule);
+				if(!$gr_cron_schedule) {
+					$gr_cron_schedule = "none";
+				}
 				$gr_current_timezone = get_option('scraper_timezone');		// we might want to look at using wp_get_schedule() instead
 
 				if(!$gr_current_timezone) {
@@ -224,32 +228,36 @@ function admin_menu_init()
 			<?php if ($gr_next_cronjob) { ?>
 				<div>
 					Next cron job scheduled to happen in <?php echo formatted_time(wp_next_scheduled('gr_cron_hook') - time()); ?> at <?php echo $gr_next_cronjob_dt->format('h:i:s A');?>.
+					<br>
+					The current cron job recurrence is <?php echo $gr_cron_schedule ?>.
+				</div>
+			<?php } else { ?>
+				<div>
+				There is currently no cron job scheduled.
+				<br>
 				</div>
 			<?php } ?>
 			<br>
 			You can choose to set the cron job to execute in 15 seconds by selecting a recurrence of daily or twice daily and pressing the button here:
 			<br>
 			<br>
-			<form method="POST" action="../wp-content/plugins/glorious-scraper/set-cronjob.php">
+			<form method="POST" action="../wp-content/plugins/glorious-scraper/set-cronjob-immediate.php">
 				<div>
-					<input type="hidden" name="hours" value="-1"> 
-					<input type="hidden" name="minutes" value="-1"> 
-					
-					<input type="radio" id="cronChoice" name="cronjobRecurrence" value="daily" <?php if($gr_cron_schedule == "daily") echo "checked"; ?> >
-					<label for="cronChoice">Daily</label>
+					<input type="radio" id="cronChoice1" name="cronjobRecurrence" value="daily" <?php if($gr_cron_schedule == "daily") echo "checked"; ?> >
+					<label for="cronChoice1">Daily</label>
 					<br>
 
 					<input type="radio" id="cronChoice2" name="cronjobRecurrence" value="twicedaily" <?php if($gr_cron_schedule == "twicedaily") echo "checked"; ?> >
 					<label for="cronChoice2">Twice Daily</label>
 				</div>
 				<br>
-				<input type='submit' href="JavaScript:void(0);" class="btn btn-dark" value='Set Cronjob From Now' />
+				<input type='submit' href="JavaScript:void(0);" class="btn btn-dark" value='Set Cron Job From Now' />
 			</form>
 			<br>
 			Alternatively, you can choose to have the cron job execute at a scheduled time in the day by selecting an hour and minute, as well as a recurrence here: 
 			<br>
 			<br>
-			<form method="POST" action="../wp-content/plugins/glorious-scraper/set-cronjob.php">
+			<form method="POST" action="../wp-content/plugins/glorious-scraper/set-cronjob-scheduled.php">
 				<div>
 					<span>
 						<label for='hours'>Hour:</label>
@@ -299,19 +307,22 @@ function admin_menu_init()
 					<br>
 				</div>
 				<div>
-					<input type="radio" id="cronChoice1" name="cronjobRecurrence" value="none" <?php if($gr_cron_schedule == "none") echo "checked"; ?>>
-					<label for="cronChoice1">None</label>
+					<input type="radio" id="cronChoiceB" name="cronjobRecurrence" value="daily" <?php if($gr_cron_schedule == "daily") echo "checked"; ?>>
+					<label for="cronChoiceB">Daily</label>
 					<br>
 
-					<input type="radio" id="cronChoice" name="cronjobRecurrence" value="daily" <?php if($gr_cron_schedule == "daily") echo "checked"; ?>>
-					<label for="cronChoice">Daily</label>
-					<br>
-
-					<input type="radio" id="cronChoice2" name="cronjobRecurrence" value="twicedaily" <?php if($gr_cron_schedule == "twicedaily") echo "checked"; ?>>
-					<label for="cronChoice2">Twice Daily</label>
+					<input type="radio" id="cronChoiceC" name="cronjobRecurrence" value="twicedaily" <?php if($gr_cron_schedule == "twicedaily") echo "checked"; ?>>
+					<label for="cronChoiceC">Twice Daily</label>
 				</div>
 				<br>
-				<input type='submit' href="JavaScript:void(0);" class="btn btn-dark" value='Schedule Cronjob' />
+				<input type='submit' href="JavaScript:void(0);" class="btn btn-dark" value='Schedule Cron Job' />
+			</form>
+			<br>
+			If you'd like to remove the current cron job, click the following button: 
+			<br>
+			<br>
+			<form method="POST" action="../wp-content/plugins/glorious-scraper/delete-cronjob.php">
+				<input type='submit' href="JavaScript:void(0);" class="btn btn-dark" value='Delete Cron Job' />
 			</form>
 
 			<hr style="margin: 10px 0;">
