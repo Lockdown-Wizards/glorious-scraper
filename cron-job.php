@@ -149,7 +149,7 @@ function write_group_pages_to_log($group_pages) {
     }
 
     // Write to the log file
-    $log_file_name = plugin_dir_path( __FILE__ ).'\\scrape_log_' . $date_str . '.txt';
+    $log_file_name = plugin_dir_path( __FILE__ ).'\\logs\\scrape_log_' . $date_str . '.txt';
     $log_file = fopen($log_file_name, 'w');
     fwrite($log_file, $log_text);
     return fclose($log_file);
