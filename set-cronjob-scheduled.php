@@ -10,7 +10,7 @@ else {
     require_once($_SERVER['DOCUMENT_ROOT'] . '/wp-load.php'); // Production
 }
 
-error_log("In SCS: CJR = " . $_POST['cronjobRecurrence']);
+//error_log("In SCS: CJR = " . $_POST['cronjobRecurrence']);
 
 // clear last cronjob
 if(wp_next_scheduled( 'gr_cron_hook' )) {
@@ -38,12 +38,13 @@ $opt_name = 'gr_cron_option';
 if (get_option($opt_name)) {    
     // The option exists in the database. Use update function.
     $opt_updated = update_option($opt_name, $_POST['cronjobRecurrence']);
-    error_log("Option update: " . ($opt_updated ? "Success" : "Failure"));
+    // This will be 0 if 'updating' wouldn't change the current option as well !!!
+    //error_log("Option update: " . ($opt_updated ? "Success" : "Failure"));
 }
 else {
     // The option doesn't exist in the database. Use add function.
     $opt_added = add_option($opt_name, $_POST['cronjobRecurrence']);
-    error_log("Option added: " . ($opt_added ? "Success" : "Failure"));
+    //error_log("Option added: " . ($opt_added ? "Success" : "Failure"));
 }
 
 if ($configs["isDevelopment"]) {

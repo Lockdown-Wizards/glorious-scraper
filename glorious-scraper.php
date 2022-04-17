@@ -191,7 +191,8 @@ function admin_menu_init()
 				// False for not scheduled, otherwise returns timestamp
 				$gr_next_cronjob = wp_next_scheduled('gr_cron_hook');
 				$gr_cron_schedule = get_option('gr_cron_option');
-				error_log("Cron Sched in glorious_scraper.php: " . $gr_cron_schedule);
+				
+				//error_log("Cron Sched in glorious_scraper.php: " . $gr_cron_schedule);
 				if(!$gr_cron_schedule) {
 					$gr_cron_schedule = "none";
 				}

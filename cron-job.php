@@ -148,8 +148,19 @@ function write_group_pages_to_log($group_pages) {
         $log_text .=  "\n" . $group_page->serialize_to_text();
     }
 
+    // Copy of original code since this works on Nick's computer:
+    /*
     // Write to the log file
     $log_file_name = plugin_dir_path( __FILE__ ).'\\logs\\scrape_log_' . $date_str . '.txt';
+    $log_file = fopen($log_file_name, 'w');
+    fwrite($log_file, $log_text);
+    return fclose($log_file);
+    */
+
+    // This is just so this runs on my (Kara's) computer:
+    // Write to the log file
+    $log_file_name = rtrim(plugin_dir_path( __FILE__ ), "/").'\\scrape_log_' . $date_str . '.txt';
+    error_log("log file name: " . $log_file_name);
     $log_file = fopen($log_file_name, 'w');
     fwrite($log_file, $log_text);
     return fclose($log_file);
