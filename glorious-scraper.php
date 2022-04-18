@@ -325,6 +325,22 @@ function admin_menu_init()
 			<form method="POST" action="../wp-content/plugins/glorious-scraper/delete-cronjob.php">
 				<input type='submit' href="JavaScript:void(0);" class="btn btn-dark" value='Delete Cron Job' />
 			</form>
+			<h3>Newsletter Output</h3>
+			<p>Save upcoming event date to a file:</p>
+			<form method="POST" action="../wp-content/plugins/glorious-scraper/glorious-newsletter.php">
+				<input type='submit' href="JavaScript:void(0);" class="btn btn-dark" value="Get Info" />
+			</form>
+			<?php 
+			$date = new DateTime('now');
+			$date->setTimezone(new DateTimeZone('America/New_York'));
+			$date_str = $date->format('Y-m-d');
+			
+			$gr_potential_log_file = rtrim(plugin_dir_path( __FILE__ ), "/").'\\NewsletterData_' . $date_str . '.txt';
+			if (file_exists($gr_potential_log_file) ) {
+				echo "<a href=\"" . plugin_dir_url(__FILE__) . "NewsletterData_" . $date_str . ".txt\">Click here to see the newsletter data.</a>";
+			} 
+			// Need to figure out what the production URL will look like...
+			?> 
 
 			<hr style="margin: 10px 0;">
 
