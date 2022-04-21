@@ -97,7 +97,7 @@ function plugin_name_run()
 	add_action('admin_menu', 'setup_admin_menu');
 
 	// Hook the cron job to wordpress so that we can schedule times to activate it.
-	require_once(plugin_dir_path(__FILE__) . '\\cron-job.php');
+	require_once(plugin_dir_path(__FILE__) . '/cron-job.php');
 	add_action( 'gr_cron_hook', 'glorious_cronjob' );
 
 	// Grab all group URL's from database.

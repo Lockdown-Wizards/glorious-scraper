@@ -164,21 +164,25 @@ function proxy_request($url) {
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1); // return the transfer as a string
         curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
         curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, array(
+            'javascript: true'
+        ));
         $response = curl_exec($ch); // send the request and save response to $response
-        curl_close($ch); // close curl resource to free up system resources
-
+        error_log("HTTP Status Code: ".curl_getinfo($ch, CURLINFO_HTTP_CODE) . PHP_EOL . "\nResponse Body: " . $response . PHP_EOL);
+        error_log(curl_error($ch));
+        $attempts--;
         if ($response) {
             // Successful scrape
             $success = true;
             return $response;
         }
-        $attempts--;
+        else if ($attempts == 0) {
+            error_log('Error: "'.curl_error($ch).'" - Code: '.curl_errno($ch));
+            curl_close($ch);
+            return false;
+        }
+        curl_close($ch); // close curl resource to free up system resources
     }
-
-    //if (!$success) {
-    error_log('Error: "'.curl_error($ch).'" - Code: '.curl_errno($ch));
-    return false;
-    //}
 }
 
 // Takes a url like 'https://mbasic.facebook.com/FairfieldCARES/events/?ref=page_internal' and removes the 'https://mbasic.facebook.com' portion of the url.

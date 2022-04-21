@@ -1,7 +1,7 @@
 <?php
 
 return [
-    'isDevelopment' => true,
+    'isDevelopment' => false,
     'enableEventsExistenceTest' => false,
     'enableCronjobTest' => false,
     'limit' => 1,
