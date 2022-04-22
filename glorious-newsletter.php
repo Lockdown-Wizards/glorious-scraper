@@ -56,25 +56,17 @@ $date = new DateTime('now');
 $date->setTimezone(new DateTimeZone('America/New_York'));
 $date_str = $date->format('Y-m-d');
 
-$log_file_name = rtrim(plugin_dir_path( __FILE__ ), "/").'\\NewsletterData_' . $date_str . '.txt';
-//error_log("log file name: " . $log_file_name);
+// this is the format that works for me, need to check on production
+$log_file_name = rtrim(plugin_dir_path( __FILE__ ), "/").'\\logs\\NewsletterData_' . $date_str . '.txt';
 $log_file = fopen($log_file_name, 'w');
 fwrite($log_file, $gr_log_text . "\n\n" . $log_text);
 fclose($log_file);
 
-/*
 if ($configs["isDevelopment"]) {
-    header('Location: http://localhost/wordpress/wp-admin/admin.php?page=event-scraper'); // Development
+    header('Location: http://localhost/wordpress/wp-content/plugins/glorious-scraper/logs/NewsletterData_' . $date_str . '.txt'); // Development
 }
 else {
-    header('Location: /wp-admin/admin.php?page=event-scraper'); // Production
-}
-*/
-if ($configs["isDevelopment"]) {
-    header('Location: http://localhost/wordpress/wp-content/plugins/glorious-scraper/NewsletterData_' . $date_str . '.txt'); // Development
-}
-else {
-    header('Location: /wp-admin/admin.php?page=event-scraper'); // Production
+    header('Location: /wp-content/plugins/glorious-scraper/logs/NewsletterData_' . $date_str . '.txt'); // Production
 }
 
 ?>

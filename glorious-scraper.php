@@ -214,9 +214,9 @@ function admin_menu_init()
 			$date->setTimezone(new DateTimeZone('America/New_York'));
 			$date_str = $date->format('Y-m-d');
 			
-			$gr_potential_log_file = rtrim(plugin_dir_path( __FILE__ ), "/").'\\NewsletterData_' . $date_str . '.txt';
+			$gr_potential_log_file = rtrim(plugin_dir_path( __FILE__ ), "/").'\\logs\\NewsletterData_' . $date_str . '.txt';
 			if (file_exists($gr_potential_log_file) ) {
-				echo "<a href=\"" . plugin_dir_url(__FILE__) . "NewsletterData_" . $date_str . ".txt\">Click here to see the newsletter data.</a>";
+				echo "<a href=\"" . plugin_dir_url(__FILE__) . "logs/NewsletterData_" . $date_str . ".txt\">Click here to see the newsletter data.</a>";
 			} 
 			// Need to figure out what the production URL will look like...
 			?> 
