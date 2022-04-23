@@ -24,7 +24,7 @@ $log_text .= "*==================================================*\n\n";
 
 $gr_log_text .= "*==================================================*\n";
 $gr_log_text .= "|                Highlighted Events  \n";
-$gr_log_text .= "|               " . $highlighted_organization . "  \n";
+$gr_log_text .= "|                " . $highlighted_organization . "  \n";
 $gr_log_text .= "*==================================================*\n\n";
 
 $grnl_events = tribe_get_events([
