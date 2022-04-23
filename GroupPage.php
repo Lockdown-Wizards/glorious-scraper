@@ -1,4 +1,6 @@
 <?php
+require_once(__DIR__ . '/EventPage.php');
+
 // Used in cron-job.php
 class GroupPage
 {
@@ -91,21 +93,53 @@ class GroupPage
         // Output example: 6d 15h 48m 19s
     }
 
-    public function serialize_event_pages() {
-        $result = [];
+    // converts object to json
+    public function serialize() {
+        $serialized_event_pages = [];
         foreach ($this->event_pages as $event_page) {
-            $result[] = $event_page->serialize();
+            $serialized_event_pages[] = $event_page->to_array();
         }
-        return $result;
+
+        return json_encode([
+            "url" => $this->url,
+            "scrape" => $this->scrape,
+            "has_scraped" => $this->has_scraped,
+            "scrape_status" => $this->scrape_status,
+            "event_pages" => $serialized_event_pages,
+            "execution_time" => $this->execution_time
+        ]);
     }
 
-    public function serialize() {
+    // $data param is json
+    public function unserialize($data) {
+        $json = json_decode($data, true);
+        $event_pages = [];
+        foreach ($json["event_pages"] as $event_page_data) {
+            $obj = new EventPage("");
+            $obj->from_array($event_page_data);
+            $event_pages[] = $obj;
+        }
+
+        $this->url = $json["url"];
+        $this->scrape = $json["scrape"];
+        $this->has_scraped = $json["has_scraped"];
+        $this->scrape_status = $json["scrape_status"];
+        $this->event_pages = $event_pages;
+        $this->execution_time = $json["execution_time"];
+    }
+
+    public function to_array() {
+        $event_pages = [];
+        foreach ($this->event_pages as $event_page) {
+            $event_pages[] = $event_page->to_array();
+        }
+
         return [
             "url" => $this->url,
             "scrape" => $this->scrape,
             "has_scraped" => $this->has_scraped,
             "scrape_status" => $this->scrape_status,
-            "event_pages" => $this->serialize_event_pages(),
+            "event_pages" => $event_pages,
             "execution_time" => $this->execution_time,
             "execution_time_readable" => $this->get_formatted_execution_time()
         ];

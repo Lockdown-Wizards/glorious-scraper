@@ -129,13 +129,14 @@ function glorious_cronjob() {
         // Prepare the results of the scrape for sending back to the front end (for testing purposes)
         $results = [];
         foreach ($group_pages as $group_page) {
-            $results[] = $group_page->serialize();
+            $results[] = $group_page->to_array();
         }
         echo json_encode($results);
     }
 }
 
 function write_group_pages_to_log($group_pages) {
+    global $configs;
     // Get time to differentiate log file
     $date = new DateTime('now');
     $date->setTimezone(new DateTimeZone('America/New_York'));

@@ -131,11 +131,13 @@
     color: #ffffff;
 }
 
+.btn-dark:disabled,
 .btn-success:disabled {
     background: #6b6b6b;
     color: #d8d8d8;
 }
 
+.btn-dark:disabled,
 .btn-success:disabled:hover {
     background: #6b6b6b;
     color: #d8d8d8;

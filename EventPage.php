@@ -80,7 +80,30 @@ class EventPage
         $this->venue_status = $venue_status;
     }
 
+    // converts object to json
     public function serialize() {
+        return json_encode([
+            "url" => $this->url,
+            "event" => $this->event,
+            "has_created_event" => $this->has_created_event,
+            "event_status" => $this->event_status,
+            "venue" => $this->venue,
+            "has_created_venue" => $this->has_created_venue,
+            "venue_status" => $this->venue_status,
+        ]);
+    }
+
+    public function from_array($arr) {
+        $this->url = $arr['url'];
+        $this->event = $arr['event'];
+        $this->has_created_event = $arr['has_created_event'];
+        $this->event_status = $arr['event_status'];
+        $this->venue = $arr['venue'];
+        $this->has_created_venue = $arr['has_created_venue'];
+        $this->venue_status = $arr['venue_status'];
+    }
+
+    public function to_array() {
         return [
             "url" => $this->url,
             "event" => $this->event,
@@ -107,7 +130,7 @@ class EventPage
         return $log_entry;
     }
 
-    // Helper function for serialize_to_log function
+    // Helper function for serialize_to_text function
     private function minify_html($html) {
         return preg_replace(
             array(
