@@ -97,8 +97,14 @@ function plugin_name_run()
 	add_action('admin_menu', 'setup_admin_menu');
 
 	// Hook the cron job to wordpress so that we can schedule times to activate it.
-	require_once(plugin_dir_path(__FILE__) . '/cron-job.php');
+	require_once(plugin_dir_path(__FILE__) . '\\cron-job.php'); // Development
+	//require_once(plugin_dir_path(__FILE__) . '/cron-job.php');  // Production
 	add_action( 'gr_cron_hook', 'glorious_cronjob' );
+
+	// Hook the export job to wordpress so that we can schedule times to activate it.
+	//require_once(plugin_dir_path(__FILE__) . '\\export.php'); // Development
+	//require_once(plugin_dir_path(__FILE__) . '/export.php');  // Production
+	//add_action( 'gr_export_hook', 'glorious_export' );
 
 	// Grab all group URL's from database.
 	$table_name = $wpdb->prefix . "gr_fbgroups";
@@ -203,6 +209,24 @@ function admin_menu_init()
 				<br>
 				<input type='submit' href="JavaScript:void(0);" class="btn btn-dark" value='Set Cronjob From Now' />
 			</form>
+
+			<hr style="margin: 10px 0;">
+
+			<h3>Export</h3>
+			<p>Exporting allows you to run the scraper on another machine and generate a file which can then be imported onto the desired site.</p>
+			<div id="exportingMessage" class="hidden">Export is now processing, don't leave the page! This message will change once the export has completed. The finished export file will appear in wp-content/plugins/glorious-scraper/exports/</div>
+			<div id="exportCompleteMessage" class="hidden" style="color: #13720c;">The export is now complete! The export file will appear in wp-content/plugins/glorious-scraper/exports/</div>
+			<div id="exportErrorMessage" class="hidden" style="color: #8e0e0e;">An error with the export occurred.</div>
+			<button id="exportButton" class="btn btn-dark">Export</button>
+			<script src="../wp-content/plugins/glorious-scraper/perform-export.js"></script>
+
+			<h3>Import</h3>
+			<p>Importing allows you to set events and venues from a file. Paste the contents of an export file below.</p>
+			<form id="importForm" method="POST" action="../wp-content/plugins/glorious-scraper/import.php" enctype="multipart/form-data">
+				<!--<textarea form="importForm" id="importData" name="importedData" rows="10" cols="100" style="position: relative; display: block;"></textarea>-->
+				<input type="file" name="importFile" id="importFile">
+				<input type='submit' href="JavaScript:void(0);" class="btn btn-dark" value='Begin Import' />
+			</form> 
 
 			<hr style="margin: 10px 0;">
 

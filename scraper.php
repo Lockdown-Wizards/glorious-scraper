@@ -35,17 +35,20 @@ const MBASIC_URL = "https://mbasic.facebook.com";
 const NORMAL_URL = "https://www.facebook.com";
 const NO_SCRIPT_QUERY = "_fb_noscript=1";
 
-// Now let's make a request!
-//$request = WpOrg\Requests\Requests::get('http://httpbin.org/get', ['Accept' => 'application/json']);
 $url = remove_domain_name_from_url($_POST['url']);
-//$url = $_POST['url'];
-//$request = WpOrg\Requests\Requests::get($url, ['Accept' => 'application/json']);
-//$fbSession = new Session();
-//$group_page = $fbSession->request(MBASIC_URL . $url);
-$group_page = proxy_request(MBASIC_URL . $url);
 
+$group_page = null;
+$fbSession = null;
 $dom = new DOMDocument(); // Create a new DOMDocument object which will be used for parsing through the html
-@ $dom->loadHTML($group_page); // @ surpresses any warnings
+if ($configs["useProxy"]) {
+    $group_page = proxy_request(MBASIC_URL . $url);
+    @ $dom->loadHTML($group_page); // @ surpresses any warnings
+}
+else {
+    $fbSession = new Session();
+    $group_page = $fbSession->request(MBASIC_URL . $url);
+    @ $dom->loadHTML($group_page->body); // @ surpresses any warnings
+}
 
 $eventLinks = extract_fb_event_links($dom);
 
@@ -79,13 +82,22 @@ foreach($eventLinks as $index => $eventLink) {
 
 // For every link, scrape it for relevant event info.
 foreach($events as $i => $event) {
-    //$event_page = $fbSession->request(MBASIC_URL . $event->get_url());
     if ($event->get_url() == "" || $event->get_url() == null) {
         continue;
     }
-    $event_page = proxy_request(MBASIC_URL . $event->get_url());
-    $event_dom = new DOMDocument();
-    @ $event_dom->loadHTML($event_page); // @ surpresses any warnings
+
+    // Get the page DOM
+    $event_dom = null;
+    if ($configs["useProxy"]) {
+        $event_page = proxy_request(MBASIC_URL . $event->get_url());
+        $event_dom = new DOMDocument();
+        @ $event_dom->loadHTML($event_page); // @ surpresses any warnings
+    }
+    else {
+        $event_page = $fbSession->request(MBASIC_URL . $event->get_url());
+        $event_dom = new DOMDocument();
+        @ $event_dom->loadHTML($event_page->body); // @ surpresses any warnings
+    }
 
     $title = extract_fb_event_title($event_dom);
     $description = extract_fb_event_description($event_dom);
@@ -127,13 +139,22 @@ foreach($events as $i => $event) {
 }
 
 foreach($events as $event) {
-    //$event_page = $fbSession->request(NORMAL_URL . $event->get_url() . "?" . NO_SCRIPT_QUERY);
     if ($event->get_url() == "" || $event->get_url() == null) {
         continue;
     }
-    $event_page = proxy_request(NORMAL_URL . $event->get_url() . "?" . NO_SCRIPT_QUERY);
-    $event_dom = new DOMDocument();
-    @ $event_dom->loadHTML($event_page); // @ surpresses any warnings
+
+    // Get the page DOM
+    $event_dom = null;
+    if ($configs["useProxy"]) {
+        $event_page = proxy_request(NORMAL_URL . $event->get_url() . "?" . NO_SCRIPT_QUERY);
+        $event_dom = new DOMDocument();
+        @ $event_dom->loadHTML($event_page); // @ surpresses any warnings
+    }
+    else {
+        $event_page = $fbSession->request(NORMAL_URL . $event->get_url() . "?" . NO_SCRIPT_QUERY);
+        $event_dom = new DOMDocument();
+        @ $event_dom->loadHTML($event_page->body); // @ surpresses any warnings
+    }
 
     $ticket_url = extract_fb_event_ticket_url($event_dom);
 
