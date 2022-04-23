@@ -12,15 +12,19 @@ else {
 
 require_once dirname(__DIR__) . '/glorious-scraper/requests/src/Autoload.php'; // First, include the Requests Autoloader.
 
+$opt_name = 'scraper_organization_name';
+$highlighted_organization = get_option($opt_name);
+
 $log_text = "";
 $gr_log_text = "";
 
 $log_text .= "*==================================================*\n";
-$log_text .= "|                  Other Events                    *\n";
+$log_text .= "|                  Other Events  \n";
 $log_text .= "*==================================================*\n\n";
 
 $gr_log_text .= "*==================================================*\n";
-$gr_log_text .= "|            Glorious Recovery Events              *\n";
+$gr_log_text .= "|                Highlighted Events  \n";
+$gr_log_text .= "|               " . $highlighted_organization . "  \n";
 $gr_log_text .= "*==================================================*\n\n";
 
 $grnl_events = tribe_get_events([
@@ -28,8 +32,9 @@ $grnl_events = tribe_get_events([
 ]);
 
 foreach($grnl_events as $event) {
+    // The Group Name will be in the event somewhere 
     // ------------- $haystack,             $needle
-    if(str_contains($event->post_content, "gloriousrecovery")) {
+    if(str_contains($event->post_content, $highlighted_organization)) {
         // Format is Image, Title, Datetime, Venue, Description
         $gr_log_text  .= "<div class=\"mcnTextContent\">";
         $gr_log_text  .= "<img class=\"mcnImage\" width=\"500px\" src=\"" . tribe_event_featured_image($event, 'full', False, False) . "\">\n"; 
