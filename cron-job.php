@@ -103,9 +103,16 @@ function glorious_cronjob() {
             // Set the venue in 'the events calendar'
             $location = $group_page->get_event_page($i)->get_event()->Location;
             if ($location !== "" && !str_contains($location, "http")) {
-                $response = WpOrg\Requests\Requests::post(get_site_url() . "/wp-content/plugins/glorious-scraper/set-venue.php", [], ['args' => json_encode($group_page->get_event_page($i)->get_venue())]);
-                if ($response->body !== "false") {
+                $venue_response = WpOrg\Requests\Requests::post(get_site_url() . "/wp-content/plugins/glorious-scraper/set-venue.php", [], ['args' => json_encode($group_page->get_event_page($i)->get_venue())]);
+                if ($venue_response->body !== "false") {
                     $group_page->get_event_page($i)->set_has_created_venue(true);
+                    $venue_link_status = update_metadata('post', $response, '_EventVenueID', $venue_response); //functions as pair-venue-to-event.php
+                    if($venue_link_status) {
+                        $group_page->get_event_page($i)->set_venue_status("Successfully linked venue to event. Event response [" . $response . "], Venue response [" . $venue_response . "]" );
+                    }
+                    else {
+                        $group_page->get_event_page($i)->set_venue_status("Did not link venue to event. Event response [" . $response . "], Venue response [" . $venue_response . "]");
+                    }
                 }
                 else {
                     //$group_page->get_event_page($i)->set_has_created_venue(false);
@@ -152,6 +159,18 @@ function write_group_pages_to_log($group_pages) {
     $log_file_name = plugin_dir_path( __FILE__ ).'\\logs\\scrape_log_' . $date_str . '.txt';
     $log_file = fopen($log_file_name, 'w');
     fwrite($log_file, $log_text);
+
+    $opt_name = 'gr_last_scrape_log';
+    $scrape_log_opt = get_option($opt_name);
+    if ($scrape_log_opt) {    
+        // The option exists in the database. Use update function.
+        update_option($opt_name, "scrape_log_" . $date_str . ".txt");
+    }
+    else {
+        // The option doesn't exist in the database. Use add function.
+        add_option($opt_name, "scrape_log_" . $date_str . ".txt");
+    }
+
     return fclose($log_file);
 }
 ?>

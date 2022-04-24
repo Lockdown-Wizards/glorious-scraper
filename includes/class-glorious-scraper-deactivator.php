@@ -84,6 +84,7 @@ class Glorious_Scraper_Deactivator {
     	wp_unschedule_event( $timestamp, 'gr_cron_hook' );
 		delete_option('gr_cron_option');
 		delete_option('scraper_organization_name');
+		delete_option('gr_last_scrape_log');
 		delete_option('scraper_timezone');
 	}
 

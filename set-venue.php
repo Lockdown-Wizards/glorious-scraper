@@ -64,12 +64,13 @@ if (isset($_POST['args'])) {
     // Find a venue that matches the venue name from the args array.
     $posts_table_name = $wpdb->prefix . "posts";
     $postmeta_table_name = $wpdb->prefix . "postmeta";
-    $post_title_with_amps = str_replace("&", "&amp;", $args['Venue']);
+    //$post_title_with_amps = str_replace("&", "&amp;", $args['Venue']);
+    $post_title_htmlspecialchars = htmlspecialchars($args['Venue']); 
     $sql = "SELECT $posts_table_name.ID, $posts_table_name.post_title, $postmeta_table_name.meta_key, $postmeta_table_name.meta_value
             FROM $posts_table_name
             INNER JOIN $postmeta_table_name ON $postmeta_table_name.post_id = $posts_table_name.ID 
             WHERE $postmeta_table_name.meta_key LIKE '_Venue%' 
-            AND $posts_table_name.post_title = '" . $post_title_with_amps . "';";
+            AND $posts_table_name.post_title = '" . $post_title_htmlspecialchars . "';";
     $results = $wpdb->get_results($sql); // Contains results for a Venue with a title that matches the one given in the args array ($args['Venue']).
     
     // Detect whether or not the venue found in the database matches with the one outlined in the args array.
