@@ -209,6 +209,30 @@ function admin_menu_init()
 				<br>
 				<input type='submit' href="JavaScript:void(0);" class="btn btn-dark" value='Set Cronjob From Now' />
 			</form>
+			<?php 
+			$last_scrape_log = get_option('gr_last_scrape_log');
+			//echo "<div>Last scrape log: " . $last_scrape_log . " </div>";
+			if($last_scrape_log) {
+				echo "<div><a href=\"" . plugin_dir_url(__FILE__) . "logs/" . $last_scrape_log . "\">Click here to see the most recent scraper log : " . $last_scrape_log . ".</a></div>";
+			}
+			?>
+
+			<h3>Newsletter Output</h3>
+			<p>Save upcoming event date to a file:</p>
+			<form method="POST" action="../wp-content/plugins/glorious-scraper/glorious-newsletter.php">
+				<input type='submit' href="JavaScript:void(0);" class="btn btn-dark" value="Get Info" />
+			</form>
+			<?php 
+			$date = new DateTime('now');
+			$date->setTimezone(new DateTimeZone('America/New_York'));
+			$date_str = $date->format('Y-m-d');
+			
+			$gr_potential_log_file = rtrim(plugin_dir_path( __FILE__ ), "/").'\\logs\\NewsletterData_' . $date_str . '.txt';
+			if (file_exists($gr_potential_log_file) ) {
+				echo "<div>><a href=\"" . plugin_dir_url(__FILE__) . "logs/NewsletterData_" . $date_str . ".txt\">Click here to see the newsletter data.</a></div>";
+			} 
+			// Need to figure out what the production URL will look like...
+			?> 
 
 			<hr style="margin: 10px 0;">
 
