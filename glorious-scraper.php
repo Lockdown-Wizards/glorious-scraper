@@ -205,7 +205,7 @@ function admin_menu_init()
 			</form>
 			<?php 
 			$last_scrape_log = get_option('gr_last_scrape_log');
-			echo "<div>Last scrape log: " . $last_scrape_log . " </div>";
+			//echo "<div>Last scrape log: " . $last_scrape_log . " </div>";
 			if($last_scrape_log) {
 				echo "<div><a href=\"" . plugin_dir_url(__FILE__) . "logs/" . $last_scrape_log . "\">Click here to see the most recent scraper log : " . $last_scrape_log . ".</a></div>";
 			}
