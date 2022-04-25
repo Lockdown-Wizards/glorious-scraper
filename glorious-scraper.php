@@ -238,18 +238,55 @@ function admin_menu_init()
 
 			<h3>Export</h3>
 			<p>Exporting allows you to run the scraper on another machine and generate a file which can then be imported onto the desired site.</p>
-			<div id="exportingMessage" class="hidden">Export is now processing, don't leave the page! This message will change once the export has completed. The finished export file will appear in wp-content/plugins/glorious-scraper/exports/</div>
-			<div id="exportCompleteMessage" class="hidden" style="color: #13720c;">The export is now complete! The export file will appear in wp-content/plugins/glorious-scraper/exports/</div>
-			<div id="exportErrorMessage" class="hidden" style="color: #8e0e0e;">An error with the export occurred.</div>
+			<div id="exportingMessage" class="hidden" style="margin-bottom: 13px;">Export is now processing, don't leave the page! This message will change once the export has completed. The finished export file will appear in wp-content/plugins/glorious-scraper/exports/</div>
+			<div id="exportCompleteMessage" class="hidden" style="color: #13720c; margin-bottom: 13px;">The export is now complete! Refresh the page to find the file under 'Recent Exports'.</div>
+			<div id="exportErrorMessage" class="hidden" style="color: #8e0e0e; margin-bottom: 13px;">An error with the export occurred.</div>
 			<button id="exportButton" class="btn btn-dark">Export</button>
 			<script src="../wp-content/plugins/glorious-scraper/perform-export.js"></script>
+
+			<h4>Recent Exports</h4>
+			<div id="exportsContainer">
+				<ul id="exportsList">
+					<?php 
+						$exports = [];
+						$relative_export_path = '/exports'.'/';
+						if ($configs["isDevelopment"]) {
+							$relative_export_path = '\\exports\\';
+						}
+						$export_path = plugin_dir_path( __FILE__ ).$relative_export_path;
+						foreach(glob($export_path . '*.json') as $index => $filepath) {
+							// Create a list of files within the export directory with page numbers associated with them.
+							if ($index < $configs["exportListPageSize"]) {
+								?>
+									<li page="0">
+										<a href="<?php echo plugin_dir_url(__FILE__).$relative_export_path.basename($filepath); ?>"><?php echo basename($filepath); ?></a>
+									</li>
+								<?php
+							}
+							else {
+								?>
+									<li page="<?php echo floor($index / $configs["exportListPageSize"]); ?>" class="hidden">
+									<a href="<?php echo plugin_dir_url(__FILE__).$relative_export_path.basename($filepath); ?>"><?php echo basename($filepath); ?></a>
+									</li>
+								<?php
+							}
+						}
+					?>
+				</ul>
+				<div style="position: relative; display: flex; justify-content: space-between; align-items: center; height: 25px; margin: 0 auto; width: 40%;">
+					<button id="exportPrevPage" class="btn btn-primary" style="position: relative; display: inline-block; flex: 1; height: 100%; min-width: 50px; padding: 2px; border-radius: 3px;">Prev</button>
+					<span style="position: relative; display: inline-block; flex: 5; height: 100%;"></span>
+					<button id="exportNextPage" class="btn btn-primary" style="position: relative; display: inline-block; flex: 1; height: 100%; min-width: 50px; padding: 2px; border-radius: 3px;">Next</button>
+				</div>
+			</div>
+			<?php include_once('export-pagination.php');?>
 
 			<h3>Import</h3>
 			<p>Importing allows you to set events and venues from a file. Paste the contents of an export file below.</p>
 			<form id="importForm" method="POST" action="../wp-content/plugins/glorious-scraper/import.php" enctype="multipart/form-data">
 				<!--<textarea form="importForm" id="importData" name="importedData" rows="10" cols="100" style="position: relative; display: block;"></textarea>-->
-				<input type="file" name="importFile" id="importFile">
-				<input type='submit' href="JavaScript:void(0);" class="btn btn-dark" value='Begin Import' />
+				<input type="file" name="importFile" id="importFile" style="position: relative; display: block; margin-bottom: 13px;">
+				<input type='submit' href="JavaScript:void(0);" class="btn btn-dark" value='Import' />
 			</form> 
 
 			<hr style="margin: 10px 0;">
