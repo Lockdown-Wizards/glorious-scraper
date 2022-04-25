@@ -7,7 +7,8 @@ return [
     'limit' => 1,
     'maxAttempts' => 6,
     'enableCronjobLogger' => true,
-    'useProxy' => false
+    'useProxy' => false,
+    'exportListPageSize' => 10
 ];
 
 ?>
