@@ -2,9 +2,16 @@
 // Access the plugin config
 $configs = include('config.php');
 
+// Get the name of the folder which wordpress resides in. (Only needed for development builds)
+$folder_name = null;
+if ($configs["isDevelopment"]) {
+    $folder_name = explode('/', explode('/wp-content', str_replace('\\', '/', __DIR__))[0]);
+    $folder_name = $folder_name[count($folder_name)-1];
+}
+
 // Access the wordpress database
 if ($configs["isDevelopment"]) {
-    require_once($_SERVER['DOCUMENT_ROOT'] . '/wordpress/wp-load.php'); // Development
+    require_once($_SERVER['DOCUMENT_ROOT'] . '/' . $folder_name . '/wp-load.php'); // Development
 }
 else {
     require_once($_SERVER['DOCUMENT_ROOT'] . '/wp-load.php'); // Production
@@ -68,7 +75,7 @@ fwrite($log_file, $gr_log_text . "\n\n" . $log_text);
 fclose($log_file);
 
 if ($configs["isDevelopment"]) {
-    header('Location: http://localhost/wordpress/wp-content/plugins/glorious-scraper/logs/NewsletterData_' . $date_str . '.txt'); // Development
+    header('Location: http://localhost/' . $folder_name . '/wp-content/plugins/glorious-scraper/logs/NewsletterData_' . $date_str . '.txt'); // Development
 }
 else {
     header('Location: /wp-content/plugins/glorious-scraper/logs/NewsletterData_' . $date_str . '.txt'); // Production

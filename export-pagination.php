@@ -3,7 +3,7 @@
 $configs = include('config.php');
 ?>
 <script>
-window.addEventListener("DOMContentLoaded", () => {
+//window.addEventListener("DOMContentLoaded", () => {
     let exportsList = document.getElementById("exportsList");
     let exportCurrentPage = 0;
     let exportPageSize = parseInt(<?php echo $configs["exportListPageSize"]; ?>)
@@ -57,5 +57,5 @@ window.addEventListener("DOMContentLoaded", () => {
             exportNextPage.disabled = false;
         }
     }
-});
+//});
 </script>

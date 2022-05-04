@@ -5,9 +5,16 @@ set_time_limit(7200);
 // Access the plugin config
 $configs = include('config.php');
 
+// Get the name of the folder which wordpress resides in. (Only needed for development builds)
+$folder_name = null;
+if ($configs["isDevelopment"]) {
+    $folder_name = explode('/', explode('/wp-content', str_replace('\\', '/', __DIR__))[0]);
+    $folder_name = $folder_name[count($folder_name)-1];
+}
+
 // Access the wordpress database
 if ($configs["isDevelopment"]) {
-    require_once($_SERVER['DOCUMENT_ROOT'] . '/wordpress/wp-load.php'); // Development
+    require_once($_SERVER['DOCUMENT_ROOT'] . '/' . $folder_name . '/wp-load.php'); // Development
 }
 else {
     require_once($_SERVER['DOCUMENT_ROOT'] . '/wp-load.php'); // Production
