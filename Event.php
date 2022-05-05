@@ -229,6 +229,8 @@ class Event
 
     private function formatted_description()
     {
+        $style = "<style>#glorious_img {background: transparent;padding: 10px;}#glorious_img::before {content: '';width: 1px;margin-left: -1px;float: left;height: 0;padding-top: 591.44px / 1127.34px * 100%;}#glorious_img::after {content: '';display: table;clear: both;}#glorious_img > img {position: relative;display: block;margin: 0 auto;width: 100%;max-height: 600px;object-fit: contain;}</style>";
+        $image = "<div id='glorious_img'><img src='" . $this->image . "' /></div>";
         $header = "<i>Event by: <a style='color: blue !important' href='https://www.facebook.com" . $this->organization_url . "' title='" . $this->organization . "' target='_blank' rel='noopener'>" . $this->organization . "</a></i>";
         $fbEvent = "<b>To view this event on Facebook, please <a style=\"color: blue !important\" href=\"http://www.facebook.com" . $this->url . "\" title=\"View on Facebook\" target=\"_blank\" rel=\"noopener\">click here.</a></b>";
         $directions = "";
@@ -241,7 +243,7 @@ class Event
         if ($this->has_tickets()) {
             $tickets = "<b>To purchase tickets for " . $this->title . ", please <a style=\"color: blue !important\" href=\"" . $this->ticket_url . "\" title=\"Buy Tickets\" target=\"_blank\" rel=\"noopener\">click here.</a></b>";
         }
-        return $header . "\n" . $this->description . "\n" . $tickets . "\n" . $directions . "\n" . $fbEvent;
+        return $style . "\n" . $image . "\n" . $header . "\n" . $this->description . "\n" . $tickets . "\n" . $directions . "\n" . $fbEvent;
     }
 
     // DOM functions for extracting what we need from facebook pages.
@@ -252,6 +254,7 @@ class Event
         $args = [
             'id' => $this->event_id,
             'post_title' => $this->title,
+            'post_status' => 'publish',
             'EventURL' => $facebook_base_url . $this->url,
             'Location' => $this->location,
             'post_content' => $this->formatted_description(),
