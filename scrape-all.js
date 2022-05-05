@@ -51,7 +51,7 @@ window.addEventListener("DOMContentLoaded", () => {
                             postForm("../wp-content/plugins/glorious-scraper/set-event.php", eventFormData).then(
                                 (eventCreationId) => {
                                     writeToConsole(
-                                        `(${args.event.Organizer}) Draft set for '${args.event.post_title}' with event id: ${eventCreationId}\n`
+                                        `(${args.event.Organizer}) Event set for '${args.event.post_title}' with event id: ${eventCreationId}\n`
                                     );
                                     writeToConsole(
                                         `<span style="color: red;">(Error) Unable to set the venue for event <a href='${args.event.EventURL}'>'${args.event.post_title}'</a>. Please enter this manually.</span>\n`
@@ -85,7 +85,7 @@ window.addEventListener("DOMContentLoaded", () => {
                                         eventFormData
                                     ).then((eventCreationId) => {
                                         writeToConsole(
-                                            `(${args.event.Organizer}) Draft set for '${args.event.post_title}' with event id: ${eventCreationId}\n`
+                                            `(${args.event.Organizer}) Event set for '${args.event.post_title}' with event id: ${eventCreationId}\n`
                                         );
 
                                         // Link the event to the venue

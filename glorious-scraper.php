@@ -165,20 +165,6 @@ function admin_menu_init()
 
 		<hr style="margin: 10px 0;">
 
-		<?php if ($configs["enableEventsExistenceTest"]) { ?>
-			<section>
-				<button id="eventExistenceTest">Test Event Existence Endpoint</button>
-				<script src="../wp-content/plugins/glorious-scraper/check-events-existence-test.js"></script>
-			</section>
-		<?php } ?>
-
-		<?php if ($configs["enableCronjobTest"]) { ?>
-			<section>
-				<button id="cronjobTest">Test Cronjob</button>
-				<script src="../wp-content/plugins/glorious-scraper/cron-job-test.js"></script>
-			</section>
-		<?php } ?>
-
 		<section>
 			<h2>Settings</h2>
 			<h3>Organization Name</h3>
