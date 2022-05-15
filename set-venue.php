@@ -4,8 +4,23 @@
  * This script will auto-detect if a venue already exists or not, so supplying an ID is not necessary (unlike set-event.php)
 */
 
+// Access the plugin config
+$configs = include('config.php');
+
+// Get the name of the folder which wordpress resides in. (Only needed for development builds)
+$folder_name = null;
+if ($configs["isDevelopment"]) {
+    $folder_name = explode('/', explode('/wp-content', str_replace('\\', '/', __DIR__))[0]);
+    $folder_name = $folder_name[count($folder_name)-1];
+}
+
 // Access the wordpress database
-require_once($_SERVER['DOCUMENT_ROOT'] . '/wordpress/wp-load.php');
+if ($configs["isDevelopment"]) {
+    require_once($_SERVER['DOCUMENT_ROOT'] . '/' . $folder_name . '/wp-load.php'); // Development
+}
+else {
+    require_once($_SERVER['DOCUMENT_ROOT'] . '/wp-load.php'); // Production
+}
 
 // Load the events calendar event creation API
 require_once dirname(__DIR__) . '/the-events-calendar/src/functions/php-min-version.php'; // Load the required php min version functions.
@@ -56,11 +71,13 @@ if (isset($_POST['args'])) {
     // Find a venue that matches the venue name from the args array.
     $posts_table_name = $wpdb->prefix . "posts";
     $postmeta_table_name = $wpdb->prefix . "postmeta";
+    //$post_title_with_amps = str_replace("&", "&amp;", $args['Venue']);
+    $post_title_htmlspecialchars = htmlspecialchars($args['Venue']); 
     $sql = "SELECT $posts_table_name.ID, $posts_table_name.post_title, $postmeta_table_name.meta_key, $postmeta_table_name.meta_value
             FROM $posts_table_name
             INNER JOIN $postmeta_table_name ON $postmeta_table_name.post_id = $posts_table_name.ID 
             WHERE $postmeta_table_name.meta_key LIKE '_Venue%' 
-            AND $posts_table_name.post_title = '".$args['Venue']."';";
+            AND $posts_table_name.post_title = '" . $post_title_htmlspecialchars . "';";
     $results = $wpdb->get_results($sql); // Contains results for a Venue with a title that matches the one given in the args array ($args['Venue']).
     
     // Detect whether or not the venue found in the database matches with the one outlined in the args array.

@@ -1,5 +1,0 @@
-<!-- <form method="post" action="../wp-content/plugins/glorious-scraper/save-all.php">
-				<input style="display: none;" value="<?php echo $url->id; ?>" name="id" />
-				<input style="display: none;" value="<?php echo $document->getElementById("url-table-$url->id") ?>" name="url" />
-				<input type="submit" value="Update" />
-			</form> -->

@@ -10,7 +10,10 @@ window.addEventListener("DOMContentLoaded", () => {
     let scraperButton = document.getElementById("scraperButton");
 
     if (scraperButton !== null) {
-        scraperButton.addEventListener("click", (e) => {
+        scraperButton.addEventListener("click", () => {
+            scraperConsole.style.height = "360px";
+            scraperConsole.style.padding = "10px";
+            scraperConsole.style.border = "2px solid black";
             scraperButton.disabled = true; // Prevent the 'Run Scraper' button from getting spammed.
             writeToConsole(
                 "Now scraping for facebook events. This may take a while, so hang tight and make a cup of tea!"
@@ -20,6 +23,10 @@ window.addEventListener("DOMContentLoaded", () => {
             let completed = 0; // Keeps track of how many URLs have been completed.
             let totalEvents = 0; // Keeps track of how many events are being scraped.
             gloriousData.urls.forEach((urlData, urlIndex) => {
+                writeToConsole(
+                    `Attempting to scrape event data from <a href='${urlData.url}'>'${urlData.url}'</a>...</span>\n`
+                );
+
                 // Scrape all events from the url
                 let formData = new FormData();
                 formData.append("url", urlData.url);
@@ -27,34 +34,35 @@ window.addEventListener("DOMContentLoaded", () => {
                     // Allows the scraper to keep track of how many events there are left.
                     totalEvents += allArgs.length;
                     console.log(allArgs);
-
-                    //writeToConsole(allArgs.body);
+                    if (!allArgs) {
+                        writeToConsole(
+                            `<span style="color: red;">(Error) Proxy service ran into an error gathering data from <a href='${urlData.url}'>'${urlData.url}'</a>. Repeat this scrape and cross your fingers.</span>\n`
+                        );
+                        return;
+                    }
 
                     // For each event, set the venue and then the event in the events calendar
                     // We create the venue first so that we may add it to the event.
                     allArgs.forEach((args) => {
-                        if (args.event.Location === "") {
+                        if (args.event.Location === "" || args.event.Location.includes("http")) {
                             // Create the event
                             let eventFormData = new FormData();
                             eventFormData.append("args", JSON.stringify(args.event));
                             postForm("../wp-content/plugins/glorious-scraper/set-event.php", eventFormData).then(
                                 (eventCreationId) => {
                                     writeToConsole(
-                                        `(${args.event.Organizer}) Draft set for '${args.event.post_title}' with event id: ${eventCreationId}\n`
+                                        `(${args.event.Organizer}) Event set for '${args.event.post_title}' with event id: ${eventCreationId}\n`
                                     );
                                     writeToConsole(
                                         `<span style="color: red;">(Error) Unable to set the venue for event <a href='${args.event.EventURL}'>'${args.event.post_title}'</a>. Please enter this manually.</span>\n`
                                     );
 
-                                    // Pair a category to the event
-                                    pairCategoryToEvent(args).then((res) => {
-                                        completed++;
-                                        if (completed === totalEvents && urlIndex + 1 === gloriousData.urls.length) {
-                                            // Display to console when scraping is complete.
-                                            writeToConsole("Scraping complete.");
-                                            scraperButton.disabled = false;
-                                        }
-                                    });
+                                    completed++;
+                                    if (completed === totalEvents && urlIndex + 1 === gloriousData.urls.length) {
+                                        // Display to console when scraping is complete.
+                                        writeToConsole("Scraping complete.");
+                                        scraperButton.disabled = false;
+                                    }
                                 }
                             );
                         } else {
@@ -77,7 +85,7 @@ window.addEventListener("DOMContentLoaded", () => {
                                         eventFormData
                                     ).then((eventCreationId) => {
                                         writeToConsole(
-                                            `(${args.event.Organizer}) Draft set for '${args.event.post_title}' with event id: ${eventCreationId}\n`
+                                            `(${args.event.Organizer}) Event set for '${args.event.post_title}' with event id: ${eventCreationId}\n`
                                         );
 
                                         // Link the event to the venue
@@ -88,26 +96,34 @@ window.addEventListener("DOMContentLoaded", () => {
                                             "../wp-content/plugins/glorious-scraper/pair-venue-to-event.php",
                                             linkVenueToEventFormData
                                         ).then(() => {
-                                            // Pair a category to the event
-                                            pairCategoryToEvent(args).then((res) => {
-                                                completed++;
-                                                if (
-                                                    completed === totalEvents &&
-                                                    urlIndex + 1 === gloriousData.urls.length
-                                                ) {
-                                                    // Display to console when scraping is complete.
-                                                    writeToConsole("Scraping complete.");
-                                                    scraperButton.disabled = false;
-                                                }
-                                            });
+                                            completed++;
+                                            if (
+                                                completed === totalEvents &&
+                                                urlIndex + 1 === gloriousData.urls.length
+                                            ) {
+                                                // Display to console when scraping is complete.
+                                                writeToConsole("Scraping complete.");
+                                                scraperButton.disabled = false;
+                                            }
                                         });
                                     });
                                 }
                             );
                         }
                     });
+
+                    if (allArgs.length <= 0) {
+                        writeToConsole(
+                            `No upcoming events for <a href="${urlData.url}">${urlData.url}</a>. Skipping this url.`
+                        );
+                    }
                 });
             });
+
+            // In case no events are found, this provides a way to re-enable the 'Run Scraper' button.
+            window.setTimeout(() => {
+                if (completed === totalEvents) scraperButton.disabled = false;
+            }, 20000 * gloriousData.urls.length);
         });
     }
 
@@ -118,36 +134,6 @@ window.addEventListener("DOMContentLoaded", () => {
             body: formData, // body data type must match "Content-Type" header
         });
         return response.json(); // parses JSON response into native JavaScript objects
-    }
-
-    // Pair a category to an event
-    async function pairCategoryToEvent(args) {
-        if (args.event.category !== "") {
-            let categoryFormData = new FormData();
-            categoryFormData.append("category", JSON.stringify(args.event.category));
-            categoryFormData.append("eventId", JSON.stringify(args.event.id));
-            let isCategoryLinkedToEvent = await postForm(
-                "../wp-content/plugins/glorious-scraper/set-category.php",
-                categoryFormData
-            );
-            console.log(isCategoryLinkedToEvent);
-            if (isCategoryLinkedToEvent) {
-                writeToConsole(
-                    `(${args.event.Organizer}) Category set as '${args.event.category}' for event '${args.event.post_title}'.\n`
-                );
-                return true;
-            } else {
-                writeToConsole(
-                    `<span style="color: red;">(Error) Unable to set the category '${args.event.category}' for event <a href='${args.event.EventURL}'>'${args.event.post_title}'</a>. Please enter this manually.</span>\n`
-                );
-                return false;
-            }
-        } else {
-            writeToConsole(
-                `<span style="color: red;">(Error) Unable to set a category for event <a href='${args.event.EventURL}'>'${args.event.post_title}'</a>. Please enter this manually.</span>\n`
-            );
-            return false;
-        }
     }
 
     // Function which writes to the console shown on the Event Scraper admin page.

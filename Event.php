@@ -18,7 +18,6 @@ class Event
     private $slug;
     private $organization;
     private $featured;
-    private $category;
 
     function __construct($url)
     {
@@ -42,7 +41,6 @@ class Event
         $this->slug = "";
         $this->organization = "";
         $this->featured = "";
-        $this->category = "";
         $this->venue = "";
     }
 
@@ -192,18 +190,17 @@ class Event
         $this->featured = $featured;
     }
 
-    public function get_category()
-    {
-        return $this->category;
-    }
-    public function set_category($category)
-    {
-        $this->category = $category;
-    }
-
     private function get_meridian($time_str)
     {
-        return str_contains($time_str, "PM") ? "PM" : "AM";
+        if (str_contains($time_str, "PM")) {
+            return "PM";
+        }
+        else if (str_contains($time_str, "AM")) {
+            return "AM";
+        }
+        else {
+            return "";
+        }
     }
     private function get_hour($time_str)
     {
@@ -212,7 +209,13 @@ class Event
     }
     private function get_minutes($time_str)
     {
-        return substr(explode(":", $time_str)[1], 0, 2);
+        $split_time = explode(":", $time_str);
+        if (count($split_time) > 1) {
+            return substr(explode(":", $time_str)[1], 0, 2);
+        }
+        else {
+            return "";
+        }
     }
 
     public function is_online()
@@ -226,6 +229,8 @@ class Event
 
     private function formatted_description()
     {
+        $style = "<style>#glorious_img {background: transparent;padding: 10px;}#glorious_img::before {content: '';width: 1px;margin-left: -1px;float: left;height: 0;padding-top: 591.44px / 1127.34px * 100%;}#glorious_img::after {content: '';display: table;clear: both;}#glorious_img > img {position: relative;display: block;margin: 0 auto;width: 100%;max-height: 600px;object-fit: contain;}</style>";
+        $image = "<div id='glorious_img'><img src='" . $this->image . "' /></div>";
         $header = "<i>Event by: <a style='color: blue !important' href='https://www.facebook.com" . $this->organization_url . "' title='" . $this->organization . "' target='_blank' rel='noopener'>" . $this->organization . "</a></i>";
         $fbEvent = "<b>To view this event on Facebook, please <a style=\"color: blue !important\" href=\"http://www.facebook.com" . $this->url . "\" title=\"View on Facebook\" target=\"_blank\" rel=\"noopener\">click here.</a></b>";
         $directions = "";
@@ -238,7 +243,7 @@ class Event
         if ($this->has_tickets()) {
             $tickets = "<b>To purchase tickets for " . $this->title . ", please <a style=\"color: blue !important\" href=\"" . $this->ticket_url . "\" title=\"Buy Tickets\" target=\"_blank\" rel=\"noopener\">click here.</a></b>";
         }
-        return $header . "\n" . $this->description . "\n" . $tickets . "\n" . $directions . "\n" . $fbEvent;
+        return $style . "\n" . $image . "\n" . $header . "\n" . $this->description . "\n" . $tickets . "\n" . $directions . "\n" . $fbEvent;
     }
 
     // DOM functions for extracting what we need from facebook pages.
@@ -246,9 +251,10 @@ class Event
     public function to_args()
     {
         $facebook_base_url = 'https://www.facebook.com';
-        return [
+        $args = [
             'id' => $this->event_id,
             'post_title' => $this->title,
+            'post_status' => 'publish',
             'EventURL' => $facebook_base_url . $this->url,
             'Location' => $this->location,
             'post_content' => $this->formatted_description(),
@@ -257,14 +263,18 @@ class Event
             'EventEndDate' => $this->end_date,
             'EventStartHour' => $this->get_hour($this->start_time),
             'EventStartMinute' => $this->get_minutes($this->start_time),
-            'EventStartMeridian' => $this->get_meridian($this->start_time),
+            //'EventStartMeridian' => $this->get_meridian($this->start_time),
             'EventEndHour' => $this->get_hour($this->end_time),
             'EventEndMinute' => $this->get_minutes($this->end_time),
-            'EventEndMeridian' => $this->get_meridian($this->end_time),
+            //'EventEndMeridian' => $this->get_meridian($this->end_time),
             'FeaturedImage' => $this->image,
             'Organizer' => $this->organization,
-            'category' => $this->category,
             'comment_status' => 'open',
         ];
+
+        if ($this->get_meridian($this->start_time) !== "") $args['EventStartMeridian'] = $this->get_meridian($this->start_time);
+        if ($this->get_meridian($this->end_time) !== "") $args['EventEndMeridian'] = $this->get_meridian($this->end_time);
+
+        return $args;
     }
 }

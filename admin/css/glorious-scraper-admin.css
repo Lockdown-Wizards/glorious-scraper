@@ -8,47 +8,48 @@
 }
 
 #urls-table {
-    font-family: Arial, Helvetica, sans-serif !important;
-    border-collapse: collapse !important;
-    width: 100% !important;
+    font-family: Arial, Helvetica, sans-serif;
+    border-collapse: collapse;
+    width: 100%;
 }
 
 #urls-table td,
 #urls-table th {
-    border: 1px solid #ddd !important;
-    padding: 8px !important;
+    border: 1px solid #ddd;
+    padding: 8px;
 }
 
 #urls-table tr:nth-child(even) {
-    background-color: #f2f2f2 !important;
+    background-color: #f2f2f2;
 }
 
 #urls-table tr:hover {
-    background-color: #ddd !important;
+    background-color: #ddd;
 }
 
 #urls-table th {
-    padding-top: 12px !important;
-    padding-bottom: 12px !important;
-    text-align: left !important;
-    background-color: #04aa6d !important;
-    color: white !important;
+    padding-top: 12px;
+    padding-bottom: 12px;
+    text-align: left;
+    background-color: #000;
+    color: white;
 }
 
 .full-width {
-    width: 500px !important;
+    width: 500px;
 }
 
 .left {
-    float: left !important;
+    float: left;
 }
 
 #scraperConsole {
     position: relative;
     display: block;
-    padding: 10px;
-    border: 2px solid black;
-    height: 360px;
+    /* padding: 10px;
+    border: 2px solid black; */
+    /* height: 360px; */
+    height: 0;
     background-color: #334;
     color: #ddc;
     font-size: 15px;
@@ -56,8 +57,153 @@
         Courier New, monospace, serif;
     border-radius: 4px;
     overflow: auto;
+    -webkit-transition: height 0.5s ease-in-out, padding 0.5s ease-in-out, border 0.5s ease-in-out;
+    -moz-transition: height 0.5s ease-in-out, padding 0.5s ease-in-out, border 0.5s ease-in-out;
+    -ms-transition: height 0.5s ease-in-out, padding 0.5s ease-in-out, border 0.5s ease-in-out;
+    -o-transition: height 0.5s ease-in-out, padding 0.5s ease-in-out, border 0.5s ease-in-out;
+    transition: height 0.5s ease-in-out, padding 0.5s ease-in-out, border 0.5s ease-in-out;
 }
 
 .hidden {
-    display: none;
+    display: none !important;
+}
+
+/* Buttons */
+.btn {
+    appearance: none;
+    -webkit-appearance: none;
+    font-family: sans-serif;
+    cursor: pointer;
+    padding: 8px;
+    min-width: 80px;
+    border: 0px;
+    -webkit-transition: background-color 100ms linear;
+    -ms-transition: background-color 100ms linear;
+    transition: background-color 100ms linear;
+}
+
+.btn:focus,
+.btn.focus {
+    outline: 0;
+}
+
+.btn-round-1 {
+    border-radius: 6px;
+}
+
+.btn-dark {
+    background: #000;
+    color: #ffffff;
+}
+
+.btn-dark:hover {
+    background: #212121;
+    color: #ffffff;
+}
+
+.btn-light {
+    background: #ededed;
+    color: #000;
+}
+
+.btn-light:hover {
+    background: #dbdbdb;
+    color: #000;
+}
+
+.btn-primary {
+    background: #3498db;
+    color: #ffffff;
+}
+
+.btn-primary:hover {
+    background: #2980b9;
+    color: #ffffff;
+}
+
+.btn-success {
+    background: #2ecc71;
+    color: #ffffff;
+}
+
+.btn-success:hover {
+    background: #27ae60;
+    color: #ffffff;
+}
+
+.btn-primary:disabled,
+.btn-dark:disabled,
+.btn-success:disabled {
+    background: #7a7a7a;
+    color: #d8d8d8;
+    cursor: not-allowed;
+}
+
+.btn-primary:disabled:hover,
+.btn-dark:disabled:hover,
+.btn-success:disabled:hover {
+    background: #6b6b6b;
+    color: #ffffff;
+}
+
+.btn-warning {
+    background: #f1c40f;
+    color: #ffffff;
+}
+
+.btn-warning:hover {
+    background: #f39c12;
+    color: #ffffff;
+}
+
+.btn-danger {
+    background: #e74c3c;
+    color: #ffffff;
+}
+
+.btn-danger:hover {
+    background: #c0392b;
+    color: #ffffff;
+}
+
+#exportsContainer {
+    position: relative;
+    display: block;
+    width: 500px;
+}
+#exportsList {
+    position: relative;
+    display: block;
+    height: auto;
+    width: 100%;
+    border-radius: 6px;
+    padding: 5px;
+    margin: 0px 0px 3px 0px;
+    list-style: none;
+    border: 2px solid #aaa;
+    min-height: 100px;
+}
+#exportsList > li {
+    position: relative;
+    display: block;
+    height: 20px;
+    padding: 2px;
+    margin-bottom: 3px;
+    background-color: #ddd;
+    color: #333;
+    border: 1px solid #aaa;
+}
+#exportsList > li:last-child {
+    margin-bottom: 0px;
+}
+#exportsList > li > a {
+    text-decoration: none;
+}
+#exportsList > li > a:hover {
+    text-decoration: none;
+    color: #5579ff;
+}
+.invisible {
+    opacity: 0 !important;
+    pointer-events: none !important;
 }
